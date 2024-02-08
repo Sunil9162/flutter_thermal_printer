@@ -1,0 +1,36 @@
+PODS:
+  - flutter_blue_plus (0.0.1):
+    - FlutterMacOS
+  - flutter_thermal_printer (0.0.1):
+    - FlutterMacOS
+    - ORSSerialPort (~> 2.1)
+  - FlutterMacOS (1.0.0)
+  - ORSSerialPort (2.1)
+
+DEPENDENCIES:
+  - flutter_blue_plus (from `Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos`)
+  - flutter_thermal_printer (from `Flutter/ephemeral/.symlinks/plugins/flutter_thermal_printer/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - ORSSerialPort
+
+SPEC REPOS:
+  trunk:
+    - ORSSerialPort
+
+EXTERNAL SOURCES:
+  flutter_blue_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos
+  flutter_thermal_printer:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_thermal_printer/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+
+SPEC CHECKSUMS:
+  flutter_blue_plus: e2868679021f19d12a8c0c58a33f1df66ec7fa6a
+  flutter_thermal_printer: 2f21f43eafe9b75debdbfc7a00edd65960775cb0
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  ORSSerialPort: d2d5d131797453430c557ba8dc7dcbcae20ff2e5
+
+PODFILE CHECKSUM: 3937b38ed3b9e0315a7e9ee559a839401c9a9437
+
+COCOAPODS: 1.14.2
