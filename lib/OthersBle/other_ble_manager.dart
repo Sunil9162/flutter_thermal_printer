@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_thermal_printer/utils/printer.dart';
 
 class OtherBleManager {
   OtherBleManager._privateConstructor();
@@ -13,10 +14,10 @@ class OtherBleManager {
     return _instance!;
   }
 
-  final StreamController<List<BluetoothDevice>> _devicesstream =
-      StreamController<List<BluetoothDevice>>.broadcast();
+  final StreamController<List<Printer>> _devicesstream =
+      StreamController<List<Printer>>.broadcast();
 
-  Stream<List<BluetoothDevice>> get devicesStream => _devicesstream.stream;
+  Stream<List<Printer>> get devicesStream => _devicesstream.stream;
   StreamSubscription? subscription;
 
   // Start scanning for BLE devices
@@ -27,7 +28,18 @@ class OtherBleManager {
         androidUsesFineLocation: true,
       );
       subscription = FlutterBluePlus.scanResults.listen((device) {
-        _devicesstream.add(device.map((e) => e.device).toList());
+        _devicesstream.add(
+          device
+              .map(
+                (e) => Printer(
+                  address: e.device.remoteId.str,
+                  name: e.device.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.device.isConnected,
+                ),
+              )
+              .toList(),
+        );
       });
     } catch (e) {
       log('Failed to start scanning for devices $e');
@@ -44,66 +56,28 @@ class OtherBleManager {
     }
   }
 
-  // Find all BLE devices
-  // Stream<List<BluetoothDevice>> scan()   {
-  //   List<ScanResult> results = [];
-  //   await FlutterBluePlus.startScan(
-  //     androidScanMode: AndroidScanMode.lowPower,
-  //     androidUsesFineLocation: true,
-  //     timeout: const Duration(seconds: 5),
-  //   );
-  //   final subscription = FlutterBluePlus.scanResults.listen((device) {
-  //     results.addAll(device);
-  //   });
-  //   List<BluetoothDevice> devices = [];
-  //   for (var result in results) {
-  //     if (result.device.platformName == '') {
-  //       continue;
-  //     } else if (devices.any(
-  //         (element) => element.remoteId.str == result.device.remoteId.str)) {
-  //       continue;
-  //     } else {
-  //       devices.add(result.device);
-  //     }
-  //   }
-  //   log('Devices: ${devices.length}');
-  //   devices += FlutterBluePlus.connectedDevices;
-  //   devices += await FlutterBluePlus.systemDevices;
-  //   if (Platform.isAndroid) {
-  //     devices += await FlutterBluePlus.bondedDevices;
-  //   }
-  //   devices = devices.toSet().toList();
-  //   log('Devices: ${devices.map((e) => e.platformName).toList()}');
-  //   return devices;
-  // }
-
-  Future<bool> connect(BluetoothDevice device) async {
+  Future<bool> connect(Printer device) async {
     try {
-      if (device.isConnected) {
-        log('Device is already connected');
-        return true;
-      }
       bool isConnected = false;
-      await device.connect();
-      final subscription = device.connectionState.listen((state) {
-        if (state == BluetoothConnectionState.connected) {
+      final bt = BluetoothDevice.fromId(device.address!);
+      await bt.connect();
+      final stream = bt.connectionState.listen((event) {
+        if (event == BluetoothConnectionState.connected) {
           isConnected = true;
         }
       });
-      await subscription.cancel();
+      await Future.delayed(const Duration(seconds: 3));
+      await stream.cancel();
       return isConnected;
     } catch (e) {
       return false;
     }
   }
 
-  Future<void> disconnect(BluetoothDevice device) async {
+  Future<void> disconnect(Printer device) async {
     try {
-      if (!device.isConnected) {
-        log('Device is already disconnected');
-        return;
-      }
-      await device.disconnect();
+      final bt = BluetoothDevice.fromId(device.address!);
+      await bt.disconnect();
     } catch (e) {
       log('Failed to disconnect device');
     }
@@ -111,10 +85,12 @@ class OtherBleManager {
 
   // Print data to BLE device
   Future<void> printData(
-    BluetoothDevice device,
-    List<int> bytes,
-  ) async {
+    Printer printer,
+    List<int> bytes, {
+    bool longData = false,
+  }) async {
     try {
+      final device = BluetoothDevice.fromId(printer.address!);
       if (!device.isConnected) {
         log('Device is not connected');
         return;
@@ -123,15 +99,41 @@ class OtherBleManager {
           value.characteristics
               .where((element) => element.properties.write)
               .isEmpty);
+      BluetoothCharacteristic? writecharacteristic;
       for (var service in services) {
         for (var characteristic in service.characteristics) {
           if (characteristic.properties.write) {
-            await characteristic.write(bytes);
-            log('Printed data to device');
-            return;
+            writecharacteristic = characteristic;
+            break;
           }
         }
       }
+      if (writecharacteristic == null) {
+        log('No write characteristic found');
+        return;
+      }
+      if (longData) {
+        int mtu = (await device.mtu.first) - 50;
+        if (mtu.isNegative) {
+          mtu = 20;
+        }
+        final numberOfTimes = bytes.length / mtu;
+        final numberOfTimesInt = numberOfTimes.toInt();
+        int timestoPrint = 0;
+        if (numberOfTimes > numberOfTimesInt) {
+          timestoPrint = numberOfTimesInt + 1;
+        } else {
+          timestoPrint = numberOfTimesInt;
+        }
+        for (var i = 0; i < timestoPrint; i++) {
+          final data = bytes.sublist(i * mtu,
+              ((i + 1) * mtu) > bytes.length ? bytes.length : ((i + 1) * mtu));
+          await writecharacteristic.write(data);
+        }
+      } else {
+        await writecharacteristic.write(bytes);
+      }
+      return;
     } catch (e) {
       log('Failed to print data to device $e');
     }

@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_thermal_printer/utils/ble_device_window.dart';
+import 'package:flutter_thermal_printer/WindowBle/window_ble_manager.dart';
+import 'package:flutter_thermal_printer/utils/printer.dart';
 
 import 'OthersBle/other_ble_manager.dart';
-import 'WindowBle/window_ble_manager.dart';
 
 export 'package:esc_pos_utils/esc_pos_utils.dart';
 export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice;
@@ -18,30 +20,55 @@ class FlutterThermalPrinter {
     return _instance!;
   }
 
-  Future<List<BleDeviceWindow>> getWindowBleDevicesList() async {
-    final devices = await WindowBleManager.instance.scan();
-    return devices.map((e) => BleDeviceWindow.fromJson(e.toJson())).toList();
+  Stream<List<Printer>> get devicesStream {
+    if (Platform.isWindows) {
+      return WindowBleManager.instance.devicesStream;
+    } else {
+      return OtherBleManager.instance.devicesStream;
+    }
   }
 
-  Stream<List<BluetoothDevice>> get devicesStream =>
-      OtherBleManager.instance.devicesStream;
-
   Future<void> startScan() async {
-    await OtherBleManager.instance.startScan();
+    if (Platform.isWindows) {
+      await WindowBleManager.instance.startscan();
+    } else {
+      await OtherBleManager.instance.startScan();
+    }
   }
 
   Future<void> stopScan() async {
-    await OtherBleManager.instance.stopScan();
+    if (Platform.isWindows) {
+      await WindowBleManager.instance.stopscan();
+    } else {
+      await OtherBleManager.instance.stopScan();
+    }
   }
 
-  Future<bool> connect(BluetoothDevice device) async {
-    return await OtherBleManager.instance.connect(device);
+  Future<bool> connect(Printer device) async {
+    if (Platform.isWindows) {
+      return await WindowBleManager.instance.connect(device);
+    } else {
+      return await OtherBleManager.instance.connect(device);
+    }
   }
 
   Future<void> printData(
-    BluetoothDevice device,
-    List<int> bytes,
-  ) async {
-    return await OtherBleManager.instance.printData(device, bytes);
+    Printer device,
+    List<int> bytes, {
+    bool longData = false,
+  }) async {
+    if (Platform.isWindows) {
+      return await WindowBleManager.instance.printData(
+        device,
+        bytes,
+        longData: longData,
+      );
+    } else {
+      return await OtherBleManager.instance.printData(
+        device,
+        bytes,
+        longData: longData,
+      );
+    }
   }
 }

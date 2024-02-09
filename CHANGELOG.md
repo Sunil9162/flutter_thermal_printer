@@ -1,3 +1,11 @@
+## 0.0.2
+
+* Added Support for Windows Bluetooth
+* Added Start and Stop Scanning for BLE devices
+* Added Connect and Disconnect Printer
+* Added Printer Model Class
+* Added `longdata` to print data for long text
+
 ## 0.0.1
 
-* Describe initial release.
+* Initial release
