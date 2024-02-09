@@ -23,9 +23,15 @@ class FlutterThermalPrinter {
     return devices.map((e) => BleDeviceWindow.fromJson(e.toJson())).toList();
   }
 
-  Future<List<BluetoothDevice>> getBleDevices() async {
-    final devices = await OtherBleManager.instance.scan();
-    return devices;
+  Stream<List<BluetoothDevice>> get devicesStream =>
+      OtherBleManager.instance.devicesStream;
+
+  Future<void> startScan() async {
+    await OtherBleManager.instance.startScan();
+  }
+
+  Future<void> stopScan() async {
+    await OtherBleManager.instance.stopScan();
   }
 
   Future<bool> connect(BluetoothDevice device) async {

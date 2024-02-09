@@ -38,12 +38,24 @@ class _MyAppState extends State<MyApp> {
   // Get Bluetooth devices list of others
   Future<void> getOthersBleDevicesList() async {
     try {
-      final devices = await _flutterThermalPrinterPlugin.getBleDevices();
-      setState(() {
-        bleDevices = devices;
+      await _flutterThermalPrinterPlugin.startScan();
+      _flutterThermalPrinterPlugin.devicesStream.listen((event) {
+        setState(() {
+          bleDevices = event.toSet().toList();
+          bleDevices.removeWhere((element) => element.platformName.isEmpty);
+        });
       });
     } on PlatformException {
       print('Failed to get USB devices list.');
+    }
+  }
+
+  // Stop scanning for BLE devices
+  Future<void> stopScan() async {
+    try {
+      await _flutterThermalPrinterPlugin.stopScan();
+    } catch (e) {
+      log('Failed to stop scanning for devices $e');
     }
   }
 
@@ -68,42 +80,89 @@ class _MyAppState extends State<MyApp> {
             ),
             ElevatedButton(
               onPressed: () {
+                if (bleDevices.isNotEmpty) {
+                  stopScan();
+                }
                 getOthersBleDevicesList();
               },
               child: const Text('Get Others Ble Devices List'),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: bleDevices.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    onTap: () async {
-                      final isConnected = await _flutterThermalPrinterPlugin
-                          .connect(bleDevices[index]);
-                      log("Devices: $isConnected");
-                    },
-                    title: Text(bleDevices[index].platformName),
-                    subtitle: Text(
-                        "VendorId: ${bleDevices[index].remoteId.str} - Connected: ${bleDevices[index].isConnected}"),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.connect_without_contact),
-                      onPressed: () async {
-                        final profile = await CapabilityProfile.load();
-                        final generator = Generator(PaperSize.mm80, profile);
-                        List<int> bytes = [];
-                        bytes += generator.text('Hello World');
-                        bytes +=
-                            generator.text("|||| FLUTTER THERMAL PRINTER ||||");
-                        bytes += generator.feed(2);
-                        bytes += generator.cut();
-                        await _flutterThermalPrinterPlugin.printData(
-                          bleDevices[index],
-                          bytes,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: bleDevices.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          onTap: () async {
+                            final isConnected =
+                                await _flutterThermalPrinterPlugin
+                                    .connect(bleDevices[index]);
+                            log("Devices: $isConnected");
+                          },
+                          title: Text(bleDevices[index].platformName),
+                          subtitle: Text(
+                              "VendorId: ${bleDevices[index].remoteId.str} - Connected: ${bleDevices[index].isConnected}"),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.connect_without_contact),
+                            onPressed: () async {
+                              final profile = await CapabilityProfile.load();
+                              final generator =
+                                  Generator(PaperSize.mm80, profile);
+                              List<int> bytes = [];
+                              bytes += generator.text('Hello World');
+                              bytes += generator
+                                  .text("|||| FLUTTER THERMAL PRINTER ||||");
+                              bytes += generator.feed(2);
+                              bytes += generator.cut();
+                              await _flutterThermalPrinterPlugin.printData(
+                                bleDevices[index],
+                                bytes,
+                              );
+                            },
+                          ),
                         );
                       },
                     ),
-                  );
-                },
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: bleDevices.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          onTap: () async {
+                            final isConnected =
+                                await _flutterThermalPrinterPlugin
+                                    .connect(bleDevices[index]);
+                            log("Devices: $isConnected");
+                          },
+                          title: Text(bleDevices[index].platformName),
+                          subtitle: Text(
+                              "VendorId: ${bleDevices[index].remoteId.str} - Connected: ${bleDevices[index].isConnected}"),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.connect_without_contact),
+                            onPressed: () async {
+                              final profile = await CapabilityProfile.load();
+                              final generator =
+                                  Generator(PaperSize.mm80, profile);
+                              List<int> bytes = [];
+                              bytes += generator.text('Hello World');
+                              bytes += generator
+                                  .text("|||| FLUTTER THERMAL PRINTER ||||");
+                              bytes += generator.feed(2);
+                              bytes += generator.cut();
+                              await _flutterThermalPrinterPlugin.printData(
+                                bleDevices[index],
+                                bytes,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
