@@ -1,3 +1,6 @@
+## 0.0.3
+* Added USB Printer Support for Android 
+
 ## 0.0.2
 
 * Added Support for Windows Bluetooth

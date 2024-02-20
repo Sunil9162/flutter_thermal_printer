@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_thermal_printer/flutter_thermal_printer_platform_interface.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 
 class OtherBleManager {
@@ -20,25 +23,44 @@ class OtherBleManager {
   Stream<List<Printer>> get devicesStream => _devicesstream.stream;
   StreamSubscription? subscription;
 
+  EventChannel? _eventChannel;
+  static String channelName = 'flutter_thermal_printer/events';
+
   // Start scanning for BLE devices
   Future<void> startScan() async {
     try {
-      await FlutterBluePlus.startScan(
-        androidScanMode: AndroidScanMode.lowPower,
-        androidUsesFineLocation: true,
-      );
+      await FlutterBluePlus.startScan();
+      if (Platform.isAndroid) {
+        _devicesstream.add((await FlutterBluePlus.systemDevices)
+            .map((e) => Printer(
+                  address: e.remoteId.str,
+                  name: e.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.isConnected,
+                ))
+            .toList());
+        // Bonded devices
+        _devicesstream.add((await FlutterBluePlus.bondedDevices)
+            .map((e) => Printer(
+                  address: e.remoteId.str,
+                  name: e.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.isConnected,
+                ))
+            .toList());
+      }
       subscription = FlutterBluePlus.scanResults.listen((device) {
         _devicesstream.add(
-          device
-              .map(
-                (e) => Printer(
-                  address: e.device.remoteId.str,
-                  name: e.device.platformName,
-                  connectionType: ConnectionType.BLE,
-                  isConnected: e.device.isConnected,
-                ),
-              )
-              .toList(),
+          device.map(
+            (e) {
+              return Printer(
+                address: e.device.remoteId.str,
+                name: e.device.platformName,
+                connectionType: ConnectionType.BLE,
+                isConnected: e.device.isConnected,
+              );
+            },
+          ).toList(),
         );
       });
     } catch (e) {
@@ -57,20 +79,37 @@ class OtherBleManager {
   }
 
   Future<bool> connect(Printer device) async {
-    try {
-      bool isConnected = false;
-      final bt = BluetoothDevice.fromId(device.address!);
-      await bt.connect();
-      final stream = bt.connectionState.listen((event) {
-        if (event == BluetoothConnectionState.connected) {
-          isConnected = true;
-        }
-      });
-      await Future.delayed(const Duration(seconds: 3));
-      await stream.cancel();
-      return isConnected;
-    } catch (e) {
-      return false;
+    if (device.connectionType == ConnectionType.USB) {
+      return await FlutterThermalPrinterPlatform.instance.connect(device);
+    } else {
+      try {
+        bool isConnected = false;
+        final bt = BluetoothDevice.fromId(device.address!);
+        await bt.connect();
+        final stream = bt.connectionState.listen((event) {
+          if (event == BluetoothConnectionState.connected) {
+            isConnected = true;
+          }
+        });
+        await Future.delayed(const Duration(seconds: 3));
+        await stream.cancel();
+        return isConnected;
+      } catch (e) {
+        return false;
+      }
+    }
+  }
+
+  Future<bool> isConnected(Printer device) async {
+    if (device.connectionType == ConnectionType.USB) {
+      return await FlutterThermalPrinterPlatform.instance.isConnected(device);
+    } else {
+      try {
+        final bt = BluetoothDevice.fromId(device.address!);
+        return bt.isConnected;
+      } catch (e) {
+        return false;
+      }
     }
   }
 
@@ -89,53 +128,179 @@ class OtherBleManager {
     List<int> bytes, {
     bool longData = false,
   }) async {
-    try {
-      final device = BluetoothDevice.fromId(printer.address!);
-      if (!device.isConnected) {
-        log('Device is not connected');
-        return;
+    if (printer.connectionType == ConnectionType.USB) {
+      try {
+        await FlutterThermalPrinterPlatform.instance.printText(
+          printer,
+          Uint8List.fromList(bytes),
+        );
+      } catch (e) {
+        log("FlutterThermalPrinter: Unable to Print Data $e");
       }
-      final services = (await device.discoverServices()).skipWhile((value) =>
-          value.characteristics
-              .where((element) => element.properties.write)
-              .isEmpty);
-      BluetoothCharacteristic? writecharacteristic;
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          if (characteristic.properties.write) {
-            writecharacteristic = characteristic;
-            break;
+    } else {
+      try {
+        final device = BluetoothDevice.fromId(printer.address!);
+        if (!device.isConnected) {
+          log('Device is not connected');
+          return;
+        }
+        final services = (await device.discoverServices()).skipWhile((value) =>
+            value.characteristics
+                .where((element) => element.properties.write)
+                .isEmpty);
+        BluetoothCharacteristic? writecharacteristic;
+        for (var service in services) {
+          for (var characteristic in service.characteristics) {
+            if (characteristic.properties.write) {
+              writecharacteristic = characteristic;
+              break;
+            }
           }
         }
-      }
-      if (writecharacteristic == null) {
-        log('No write characteristic found');
-        return;
-      }
-      if (longData) {
-        int mtu = (await device.mtu.first) - 50;
-        if (mtu.isNegative) {
-          mtu = 20;
+        if (writecharacteristic == null) {
+          log('No write characteristic found');
+          return;
         }
-        final numberOfTimes = bytes.length / mtu;
-        final numberOfTimesInt = numberOfTimes.toInt();
-        int timestoPrint = 0;
-        if (numberOfTimes > numberOfTimesInt) {
-          timestoPrint = numberOfTimesInt + 1;
+        if (longData) {
+          int mtu = (await device.mtu.first) - 50;
+          if (mtu.isNegative) {
+            mtu = 20;
+          }
+          final numberOfTimes = bytes.length / mtu;
+          final numberOfTimesInt = numberOfTimes.toInt();
+          int timestoPrint = 0;
+          if (numberOfTimes > numberOfTimesInt) {
+            timestoPrint = numberOfTimesInt + 1;
+          } else {
+            timestoPrint = numberOfTimesInt;
+          }
+          for (var i = 0; i < timestoPrint; i++) {
+            final data = bytes.sublist(
+                i * mtu,
+                ((i + 1) * mtu) > bytes.length
+                    ? bytes.length
+                    : ((i + 1) * mtu));
+            await writecharacteristic.write(data);
+          }
         } else {
-          timestoPrint = numberOfTimesInt;
+          await writecharacteristic.write(bytes);
         }
-        for (var i = 0; i < timestoPrint; i++) {
-          final data = bytes.sublist(i * mtu,
-              ((i + 1) * mtu) > bytes.length ? bytes.length : ((i + 1) * mtu));
-          await writecharacteristic.write(data);
-        }
-      } else {
-        await writecharacteristic.write(bytes);
+        return;
+      } catch (e) {
+        log('Failed to print data to device $e');
       }
-      return;
-    } catch (e) {
-      log('Failed to print data to device $e');
     }
+  }
+
+  startUsbListener() {
+    _eventChannel = EventChannel(channelName);
+    _eventChannel?.receiveBroadcastStream().listen((event) {
+      log('USB Event: $event');
+    });
+  }
+
+  StreamSubscription? _usbSubscription;
+
+  // USB
+  Future<dynamic> startUsbScan({
+    Duration refreshDuration = const Duration(seconds: 5),
+  }) async {
+    _usbSubscription?.cancel();
+    startUsbListener();
+    _usbSubscription =
+        Stream.periodic(refreshDuration, (x) => x).listen((event) async {
+      List<Printer> list = [];
+      final devices =
+          await FlutterThermalPrinterPlatform.instance.startUsbScan();
+      for (var e in devices) {
+        final map = Map<String, dynamic>.from(e);
+        final device = Printer(
+          vendorId: map['vendorId'],
+          productId: map['productId'],
+          name: map['name'],
+          connectionType: ConnectionType.USB,
+          address: map['vendorId'],
+          isConnected: false,
+        );
+        final isConnected =
+            await FlutterThermalPrinterPlatform.instance.isConnected(device);
+        device.isConnected = isConnected;
+        list.add(device);
+      }
+      _devicesstream.add(list);
+    });
+  }
+
+  // Get Printers from BT and USB
+  void getPrinters({
+    Duration refreshDuration = const Duration(seconds: 5),
+    List<ConnectionType> connectionTypes = const [
+      ConnectionType.BLE,
+      ConnectionType.USB,
+    ],
+  }) async {
+    List<Printer> list = [];
+    if (connectionTypes.contains(ConnectionType.BLE)) {
+      subscription?.cancel();
+      await FlutterBluePlus.startScan();
+      if (Platform.isAndroid) {
+        list.addAll((await FlutterBluePlus.systemDevices)
+            .map((e) => Printer(
+                  address: e.remoteId.str,
+                  name: e.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.isConnected,
+                ))
+            .toList());
+        // Bonded devices
+        list.addAll((await FlutterBluePlus.bondedDevices)
+            .map((e) => Printer(
+                  address: e.remoteId.str,
+                  name: e.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.isConnected,
+                ))
+            .toList());
+      }
+      subscription = FlutterBluePlus.scanResults.listen((device) {
+        list.addAll(
+          device.map(
+            (e) {
+              return Printer(
+                address: e.device.remoteId.str,
+                name: e.device.platformName,
+                connectionType: ConnectionType.BLE,
+                isConnected: e.device.isConnected,
+              );
+            },
+          ).toList(),
+        );
+      });
+    }
+    if (connectionTypes.contains(ConnectionType.USB)) {
+      _usbSubscription?.cancel();
+      _usbSubscription =
+          Stream.periodic(refreshDuration, (x) => x).listen((event) async {
+        final devices =
+            await FlutterThermalPrinterPlatform.instance.startUsbScan();
+        for (var e in devices) {
+          final map = Map<String, dynamic>.from(e);
+          final device = Printer(
+            vendorId: map['vendorId'],
+            productId: map['productId'],
+            name: map['name'],
+            connectionType: ConnectionType.USB,
+            address: map['vendorId'],
+            isConnected: false,
+          );
+          final isConnected =
+              await FlutterThermalPrinterPlatform.instance.isConnected(device);
+          device.isConnected = isConnected;
+          list.add(device);
+        }
+      });
+      startUsbListener();
+    }
+    _devicesstream.add(list);
   }
 }

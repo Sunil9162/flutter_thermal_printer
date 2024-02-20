@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_thermal_printer/utils/printer.dart';
 
 import 'flutter_thermal_printer_platform_interface.dart';
 
@@ -14,5 +15,35 @@ class MethodChannelFlutterThermalPrinter extends FlutterThermalPrinterPlatform {
     final version =
         await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
+  }
+
+  @override
+  Future<dynamic> startUsbScan() async {
+    return await methodChannel.invokeMethod('getUsbDevicesList');
+  }
+
+  @override
+  Future<bool> connect(Printer device) async {
+    return await methodChannel.invokeMethod('connect', {
+      "vendorId": device.vendorId.toString(),
+      "productId": device.productId.toString(),
+    });
+  }
+
+  @override
+  Future<bool> printText(Printer device, Uint8List data) async {
+    return await methodChannel.invokeMethod('printText', {
+      "vendorId": device.vendorId.toString(),
+      "productId": device.productId.toString(),
+      "data": List<int>.from(data),
+    });
+  }
+
+  @override
+  Future<bool> isConnected(Printer device) async {
+    return await methodChannel.invokeMethod('isConnected', {
+      "vendorId": device.vendorId.toString(),
+      "productId": device.productId.toString(),
+    });
   }
 }

@@ -20,36 +20,24 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
 
-  List<Printer> bleDevices = [];
+  List<Printer> printers = [];
 
   StreamSubscription<List<Printer>>? _devicesStreamSubscription;
 
-  //  Start scanning for BLE devices
-  Future<void> startScan() async {
-    try {
-      await _flutterThermalPrinterPlugin.startScan();
-      _devicesStreamSubscription =
-          _flutterThermalPrinterPlugin.devicesStream.listen((event) {
-        setState(() {
-          bleDevices = event.map((e) => Printer.fromJson(e.toJson())).toList();
-          bleDevices.removeWhere(
-            (element) => element.name == null || element.name!.isEmpty,
-          );
-        });
+  // Get Printer List
+  void startScan() async {
+    _devicesStreamSubscription?.cancel();
+    await _flutterThermalPrinterPlugin.getPrinters();
+    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
+        .listen((List<Printer> event) {
+      setState(() {
+        printers = event;
+        printers.removeWhere((element) =>
+            element.name == null ||
+            element.name == '' ||
+            !element.name!.toLowerCase().contains('print'));
       });
-    } catch (e) {
-      log('Failed to start scanning for devices $e');
-    }
-  }
-
-  // Stop scanning for BLE devices
-  Future<void> stopScan() async {
-    try {
-      _devicesStreamSubscription?.cancel();
-      await _flutterThermalPrinterPlugin.stopScan();
-    } catch (e) {
-      log('Failed to stop scanning for devices $e');
-    }
+    });
   }
 
   @override
@@ -67,26 +55,23 @@ class _MyAppState extends State<MyApp> {
           children: [
             ElevatedButton(
               onPressed: () {
-                if (bleDevices.isNotEmpty) {
-                  stopScan();
-                }
                 startScan();
               },
-              child: const Text('Get Others Ble Devices List'),
+              child: const Text('Get Printers'),
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: bleDevices.length,
+                itemCount: printers.length,
                 itemBuilder: (context, index) {
                   return ListTile(
                     onTap: () async {
                       final isConnected = await _flutterThermalPrinterPlugin
-                          .connect(bleDevices[index]);
+                          .connect(printers[index]);
                       log("Devices: $isConnected");
                     },
-                    title: Text(bleDevices[index].name ?? 'No Name'),
+                    title: Text(printers[index].name ?? 'No Name'),
                     subtitle: Text(
-                        "VendorId: ${bleDevices[index].address} - Connected: ${bleDevices[index].isConnected}"),
+                        "VendorId: ${printers[index].address} - Connected: ${printers[index].isConnected}"),
                     trailing: IconButton(
                       icon: const Icon(Icons.connect_without_contact),
                       onPressed: () async {
@@ -99,7 +84,7 @@ class _MyAppState extends State<MyApp> {
                         bytes += generator.feed(2);
                         bytes += generator.cut();
                         await _flutterThermalPrinterPlugin.printData(
-                          bleDevices[index],
+                          printers[index],
                           bytes,
                           longData: true,
                         );

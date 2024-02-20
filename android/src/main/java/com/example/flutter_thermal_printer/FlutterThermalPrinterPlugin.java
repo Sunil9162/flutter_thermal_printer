@@ -4,11 +4,14 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import java.util.List;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.EventChannel;
 
 /** FlutterThermalPrinterPlugin */
 public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHandler {
@@ -17,13 +20,18 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
+  private EventChannel eventChannel;
   private Context context;
+  private UsbPrinter usbPrinter;
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+    usbPrinter = new UsbPrinter(context); 
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer");
+    eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer/events");
     channel.setMethodCallHandler(this);
     context = flutterPluginBinding.getApplicationContext();
+    eventChannel.setStreamHandler(usbPrinter);
   }
 
   @Override
@@ -31,9 +39,22 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
     if (call.method.equals("getPlatformVersion")) {
       result.success("Android " + android.os.Build.VERSION.RELEASE);
     }else if (call.method.equals("getUsbDevicesList")){
-        result.success(UsbPrinter.getUsbDevicesList(context));
-    }
-    else {
+        result.success(usbPrinter.getUsbDevicesList());
+    }else  if (call.method.equals("connect")){
+      String vendorId = call.argument("vendorId");
+      String productId = call.argument("productId");
+      result.success(usbPrinter.connect(vendorId, productId));
+    } else if (call.method.equals("printText")){
+      String vendorId = call.argument("vendorId");
+      String productId = call.argument("productId");
+      List<Integer> data = call.argument("data");
+      usbPrinter.printText(vendorId,productId,data);
+      result.success(true);
+    } else if (call.method.equals("isConnected")) {
+        String vendorId = call.argument("vendorId");
+        String productId = call.argument("productId");
+        result.success(usbPrinter.isConnected(vendorId, productId));
+    } else {
       result.notImplemented();
     }
   }

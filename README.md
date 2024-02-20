@@ -11,7 +11,7 @@ This plugin is used to print data on thermal printer.
 | Service                        | Android | iOS | macOS | Windows |
 | ------------------------------ | :-----: | :-: | :---: |:-----:  |
 | Bluetooth                      | ✅      | ✅  | ✅    | ✅      |
-| USB                            |         |     |       |         |
+| USB                            | ✅      |     |       |         |
 
 ```dart
  final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
@@ -47,6 +47,22 @@ This plugin is used to print data on thermal printer.
       log('Failed to stop scanning for devices $e');
     }
   }
+
+ // Usb Devices List
+  Future<void> getUsbDevicesList() async {
+    try {
+      await _flutterThermalPrinterPlugin.getUsbDevices();
+      _devicesStreamSubscription?.cancel();
+      _devicesStreamSubscription =
+          _flutterThermalPrinterPlugin.devicesStream.listen((event) {
+        setState(() {
+          printers = event;
+        });
+      });
+    } catch (e) {
+      log('Failed to get usb devices list $e');
+    }
+  }
 ```
 
 ## Bluetooth Services
@@ -58,6 +74,15 @@ This plugin is used to print data on thermal printer.
 | connect printer                | ✅      | ✅  | ✅    | ✅      |
 | disconnect printer             | ✅      | ✅  | ✅    | ✅      |
 | print data                     | ✅      | ✅  | ✅    | ✅      |
+
+## USB Services
+
+| Feature                        | Android | iOS | macOS | Windows |
+| ------------------------------ | :-----: | :-: | :---: |:-----:  |
+| Start scanning                 | ✅      |     |       |         |
+| stop scanning                  | ✅      |     |       |         |
+| connect printer                | ✅      |     |       |         |
+| print data                     | ✅      |     |       |         |
 
 ## Printer Model Class
 ```dart

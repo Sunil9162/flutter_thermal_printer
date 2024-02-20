@@ -12,6 +12,8 @@
 
 #include <memory>
 #include <sstream>
+#include <stdio.h>
+#include <usbuf.h>
 
 namespace flutter_thermal_printer {
 
@@ -51,9 +53,45 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
       version_stream << "7";
     }
     result->Success(flutter::EncodableValue(version_stream.str()));
-  } else {
+  } if (method_call.method_name().compare("getUsbDevicesList") == 0) { 
+    // Get the list of USB devices
+    std::vector<std::string> usb_devices;
+    // Get the list of USB devices
+    usb_device_info *devices = NULL;
+    int count = get_usb_devices(&devices);
+    for (int i = 0; i < count; i++) {
+      usb_devices.push_back(devices[i].device_name);
+    }
+    // return the list of USB devices
+    result->Success(flutter::EncodableValue(usb_devices));
+  }
+  else {
     result->NotImplemented();
   }
 }
+
+// // Get List of Printers with return type as List of devices
+// void FlutterThermalPrinterPlugin::GetPrinters() {
+//   // Get the list of printers
+//   std::vector<std::string> printers;
+//   // Get the list of printers
+//   DWORD needed = 0;
+//   DWORD returned = 0;
+//   if (!EnumPrinters(PRINTER_ENUM_LOCAL, NULL, 4, NULL, 0, &needed, &returned)) {
+//     if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+//       PRINTER_INFO_4 *printer_info = (PRINTER_INFO_4 *)malloc(needed);
+//       if (EnumPrinters(PRINTER_ENUM_LOCAL, NULL, 4, (LPBYTE)printer_info, needed,
+//                        &needed, &returned)) {
+//         for (DWORD i = 0; i < returned; i++) {
+//           printers.push_back(printer_info[i].pPrinterName);
+//         }
+//       }
+//       free(printer_info);
+//     }
+//   }
+//   // return the list of printers
+//   return printers;
+
+// }
 
 }  // namespace flutter_thermal_printer

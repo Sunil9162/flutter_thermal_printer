@@ -71,4 +71,28 @@ class FlutterThermalPrinter {
       );
     }
   }
+
+  Future<void> getUsbDevices() async {
+    if (Platform.isWindows) {
+    } else {
+      await OtherBleManager.instance.startUsbScan();
+    }
+  }
+
+  Future<void> getPrinters({
+    Duration refreshDuration = const Duration(seconds: 2),
+    List<ConnectionType> connectionTypes = const [
+      ConnectionType.USB,
+      ConnectionType.BLE
+    ],
+  }) async {
+    if (Platform.isWindows) {
+      // await WindowBleManager.instance.getPrinters();
+    } else {
+      OtherBleManager.instance.getPrinters(
+        refreshDuration: refreshDuration,
+        connectionTypes: connectionTypes,
+      );
+    }
+  }
 }

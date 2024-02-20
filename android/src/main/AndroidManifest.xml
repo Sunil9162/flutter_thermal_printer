@@ -1,3 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.example.flutter_thermal_printer">
+    <uses-feature android:name="android.hardware.usb.host" android:required="false"/>
+    <uses-permission android:name="android.permission.USB_PERMISSION"/> 
 </manifest>
