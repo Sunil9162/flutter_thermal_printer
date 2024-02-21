@@ -1,14 +1,12 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_thermal_printer/flutter_thermal_printer.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
-import 'package:image/image.dart' as img;
 
 void main() {
   runApp(const MyApp());
@@ -85,34 +83,34 @@ class _MyAppState extends State<MyApp> {
                         // bytes += generator.text('Hello World');
                         bytes +=
                             generator.text("|||| FLUTTER THERMAL PRINTER ||||");
-                        final screenshot =
-                            await screenshotController.captureFromWidget(
-                          receiptWidget(),
-                        );
-                        final img.Image? image = img.decodeImage(screenshot);
-                        final base64Image = base64Encode(img.encodePng(image!));
-                        final img.Image? imgImage = img.decodeImage(
-                          base64Decode(base64Image),
-                        );
-                        bytes += generator.imageRaster(imgImage!);
+                        // final screenshot =
+                        //     await screenshotController.captureFromWidget(
+                        //   receiptWidget(),
+                        // );
+                        // final img.Image? image = img.decodeImage(screenshot);
+                        // final base64Image = base64Encode(img.encodePng(image!));
+                        // final img.Image? imgImage = img.decodeImage(
+                        //   base64Decode(base64Image),
+                        // );
+                        // bytes += generator.imageRaster(imgImage!);
                         // bytes += generator.cut();
                         //Break the data into chunks
                         const chunkSize = 100;
-
-                        for (var i = 0; i < bytes.length; i += chunkSize) {
-                          await Future.delayed(
-                              const Duration(milliseconds: 100));
-                          await _flutterThermalPrinterPlugin.printData(
-                            printers[index],
-                            bytes.sublist(
-                              i,
-                              i + chunkSize > bytes.length
-                                  ? bytes.length
-                                  : i + chunkSize,
-                            ),
-                            longData: true,
-                          );
-                        }
+                        log("Bytes: $bytes");
+                        // for (var i = 0; i < bytes.length; i += chunkSize) {
+                        //   await Future.delayed(
+                        //       const Duration(milliseconds: 100));
+                        //   await _flutterThermalPrinterPlugin.printData(
+                        //     printers[index],
+                        //     bytes.sublist(
+                        //       i,
+                        //       i + chunkSize > bytes.length
+                        //           ? bytes.length
+                        //           : i + chunkSize,
+                        //     ),
+                        //     longData: true,
+                        //   );
+                        // }
                       },
                     ),
                   );

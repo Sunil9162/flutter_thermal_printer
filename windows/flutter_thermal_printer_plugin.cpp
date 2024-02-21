@@ -16,7 +16,25 @@
 #include <usbuf.h>
 
 namespace flutter_thermal_printer {
+  using flutter::EncodableList;
+  using flutter::EncodableMap;
+  using flutter::EncodableValue;
 
+  class FlutterThermalPrinterPlugin : public flutter::Plugin
+  {
+  public:
+    static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
+
+    FlutterThermalPrinterPlugin();
+
+    virtual ~FlutterThermalPrinterPlugin();
+
+  private:
+    // Called when a method is called on this plugin's channel from Dart.
+    void HandleMethodCall(
+        const flutter::MethodCall<flutter::EncodableValue> &method_call,
+        std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  };
 // static
 void FlutterThermalPrinterPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
@@ -69,29 +87,84 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
     result->NotImplemented();
   }
 }
+ void FlutterThermalPrinterPlugin::HandleMethodCall(
+      const flutter::MethodCall<EncodableValue> &method_call,
+      std::unique_ptr<flutter::MethodResult<EncodableValue>> result)
+  {
+    // Get arguments the C++ way
+    const auto *args = std::get_if<EncodableMap>(method_call.arguments());
 
-// // Get List of Printers with return type as List of devices
-// void FlutterThermalPrinterPlugin::GetPrinters() {
-//   // Get the list of printers
-//   std::vector<std::string> printers;
-//   // Get the list of printers
-//   DWORD needed = 0;
-//   DWORD returned = 0;
-//   if (!EnumPrinters(PRINTER_ENUM_LOCAL, NULL, 4, NULL, 0, &needed, &returned)) {
-//     if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-//       PRINTER_INFO_4 *printer_info = (PRINTER_INFO_4 *)malloc(needed);
-//       if (EnumPrinters(PRINTER_ENUM_LOCAL, NULL, 4, (LPBYTE)printer_info, needed,
-//                        &needed, &returned)) {
-//         for (DWORD i = 0; i < returned; i++) {
-//           printers.push_back(printer_info[i].pPrinterName);
-//         }
-//       }
-//       free(printer_info);
-//     }
-//   }
-//   // return the list of printers
-//   return printers;
+    if (method_call.method_name().compare("getList") == 0)
+    {
+      auto printers = PrintManager::listPrinters();
+      auto list = EncodableList{};
+      for (auto printer : printers)
+      {
+        auto map = EncodableMap{};
+        map[EncodableValue("name")] =
+            EncodableValue(printer.name);
+        map[EncodableValue("model")] =
+            EncodableValue(printer.model);
+        map[EncodableValue("default")] =
+            EncodableValue(printer.default);
+        map[EncodableValue("available")] =
+            EncodableValue(printer.available);
+        list.push_back(map);
+      }
 
-// }
+      return result->Success(list);
+    }
+    else if (method_call.method_name().compare("connectPrinter") == 0)
+    {
+      std::string printerName;
+
+      if (args)
+      {
+        auto name_it = args->find(EncodableValue("name"));
+        if (name_it != args->end())
+        {
+          printerName = std::get<std::string>(name_it->second);
+        }
+
+        auto success = PrintManager::pickPrinter(printerName);
+        return result->Success(EncodableValue(success));
+      }
+
+      return result->Success(EncodableValue(false));
+    }
+    else if (method_call.method_name().compare("close") == 0)
+    {
+      auto success = PrintManager::close();
+      return result->Success(EncodableValue(success));
+    }
+    else if (method_call.method_name().compare("printBytes") == 0)
+    {
+      std::vector<uint8_t> bytes;
+
+      if (args)
+      {
+        auto bytes_it = args->find(EncodableValue("bytes"));
+        if (bytes_it != args->end())
+        {
+          bytes = std::get<std::vector<uint8_t>>(bytes_it->second);
+        }
+
+        auto success = PrintManager::printBytes(bytes);
+        return result->Success(EncodableValue(success));
+      }
+    }
+    else
+    {
+      result->NotImplemented();
+    }
+  }
 
 }  // namespace flutter_thermal_printer
+
+void FlutterPosPrinterPluginRegisterWithRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar)
+{
+  FlutterPosPrinterPlugin::RegisterWithRegistrar(
+      flutter::PluginRegistrarManager::GetInstance()
+          ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
+}
