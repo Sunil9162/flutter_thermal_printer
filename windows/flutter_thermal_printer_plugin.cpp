@@ -57,36 +57,36 @@ FlutterThermalPrinterPlugin::FlutterThermalPrinterPlugin() {}
 
 FlutterThermalPrinterPlugin::~FlutterThermalPrinterPlugin() {}
 
-void FlutterThermalPrinterPlugin::HandleMethodCall(
-    const flutter::MethodCall<flutter::EncodableValue> &method_call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
-    std::ostringstream version_stream;
-    version_stream << "Windows ";
-    if (IsWindows10OrGreater()) {
-      version_stream << "10+";
-    } else if (IsWindows8OrGreater()) {
-      version_stream << "8";
-    } else if (IsWindows7OrGreater()) {
-      version_stream << "7";
-    }
-    result->Success(flutter::EncodableValue(version_stream.str()));
-  } if (method_call.method_name().compare("getUsbDevicesList") == 0) { 
-    // Get the list of USB devices
-    std::vector<std::string> usb_devices;
-    // Get the list of USB devices
-    usb_device_info *devices = NULL;
-    int count = get_usb_devices(&devices);
-    for (int i = 0; i < count; i++) {
-      usb_devices.push_back(devices[i].device_name);
-    }
-    // return the list of USB devices
-    result->Success(flutter::EncodableValue(usb_devices));
-  }
-  else {
-    result->NotImplemented();
-  }
-}
+// void FlutterThermalPrinterPlugin::HandleMethodCall(
+//     const flutter::MethodCall<flutter::EncodableValue> &method_call,
+//     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+//   if (method_call.method_name().compare("getPlatformVersion") == 0) {
+//     std::ostringstream version_stream;
+//     version_stream << "Windows ";
+//     if (IsWindows10OrGreater()) {
+//       version_stream << "10+";
+//     } else if (IsWindows8OrGreater()) {
+//       version_stream << "8";
+//     } else if (IsWindows7OrGreater()) {
+//       version_stream << "7";
+//     }
+//     result->Success(flutter::EncodableValue(version_stream.str()));
+//   } if (method_call.method_name().compare("getUsbDevicesList") == 0) { 
+//     // Get the list of USB devices
+//     std::vector<std::string> usb_devices;
+//     // Get the list of USB devices
+//     usb_device_info *devices = NULL;
+//     int count = get_usb_devices(&devices);
+//     for (int i = 0; i < count; i++) {
+//       usb_devices.push_back(devices[i].device_name);
+//     }
+//     // return the list of USB devices
+//     result->Success(flutter::EncodableValue(usb_devices));
+//   }
+//   else {
+//     result->NotImplemented();
+//   }
+// }
  void FlutterThermalPrinterPlugin::HandleMethodCall(
       const flutter::MethodCall<EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<EncodableValue>> result)
@@ -94,7 +94,7 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
     // Get arguments the C++ way
     const auto *args = std::get_if<EncodableMap>(method_call.arguments());
 
-    if (method_call.method_name().compare("getList") == 0)
+    if (method_call.method_name().compare("getUsbDevicesList") == 0)
     {
       auto printers = PrintManager::listPrinters();
       auto list = EncodableList{};
@@ -114,7 +114,7 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
 
       return result->Success(list);
     }
-    else if (method_call.method_name().compare("connectPrinter") == 0)
+    else if (method_call.method_name().compare("connect") == 0)
     {
       std::string printerName;
 
@@ -137,7 +137,7 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
       auto success = PrintManager::close();
       return result->Success(EncodableValue(success));
     }
-    else if (method_call.method_name().compare("printBytes") == 0)
+    else if (method_call.method_name().compare("printText") == 0)
     {
       std::vector<uint8_t> bytes;
 
@@ -153,6 +153,12 @@ void FlutterThermalPrinterPlugin::HandleMethodCall(
         return result->Success(EncodableValue(success));
       }
     }
+    else if (method_call.method_name().compare("isConnected") == 0)
+    {
+      auto success = true;
+      return result->Success(EncodableValue(success));
+    }
+    
     else
     {
       result->NotImplemented();
