@@ -47,7 +47,7 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDe
         let args = call.arguments as? [String: Any]
         let vendorID = args?["vendorId"] as? String
         let productID = args?["productId"] as? String
-        let data = args?["data"] as? List<Int>
+        let data = args?["data"] as? Array<Int>
 
     case "isConnected":
         let args = call.arguments as? [String: Any]

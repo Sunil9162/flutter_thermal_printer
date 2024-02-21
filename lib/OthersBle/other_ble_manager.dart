@@ -162,10 +162,7 @@ class OtherBleManager {
           return;
         }
         if (longData) {
-          int mtu = (await device.mtu.first) - 50;
-          if (mtu.isNegative) {
-            mtu = 20;
-          }
+          int mtu = (await device.mtu.first) - 30;
           final numberOfTimes = bytes.length / mtu;
           final numberOfTimesInt = numberOfTimes.toInt();
           int timestoPrint = 0;

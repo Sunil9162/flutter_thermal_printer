@@ -9,6 +9,7 @@ import 'OthersBle/other_ble_manager.dart';
 
 export 'package:esc_pos_utils/esc_pos_utils.dart';
 export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice;
+export 'package:screenshot/screenshot.dart';
 
 class FlutterThermalPrinter {
   FlutterThermalPrinter._();
