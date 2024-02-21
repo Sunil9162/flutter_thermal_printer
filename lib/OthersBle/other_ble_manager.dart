@@ -239,50 +239,34 @@ class OtherBleManager {
       ConnectionType.USB,
     ],
   }) async {
-    List<Printer> list = [];
+    List<Printer> btlist = [];
     if (connectionTypes.contains(ConnectionType.BLE)) {
       subscription?.cancel();
       await FlutterBluePlus.startScan();
-      if (Platform.isAndroid) {
-        list.addAll((await FlutterBluePlus.systemDevices)
-            .map((e) => Printer(
-                  address: e.remoteId.str,
-                  name: e.platformName,
-                  connectionType: ConnectionType.BLE,
-                  isConnected: e.isConnected,
-                ))
-            .toList());
-        // Bonded devices
-        list.addAll((await FlutterBluePlus.bondedDevices)
-            .map((e) => Printer(
-                  address: e.remoteId.str,
-                  name: e.platformName,
-                  connectionType: ConnectionType.BLE,
-                  isConnected: e.isConnected,
-                ))
-            .toList());
-      }
       subscription = FlutterBluePlus.scanResults.listen((device) {
-        list.addAll(
-          device.map(
-            (e) {
-              return Printer(
-                address: e.device.remoteId.str,
-                name: e.device.platformName,
-                connectionType: ConnectionType.BLE,
-                isConnected: e.device.isConnected,
-              );
-            },
-          ).toList(),
-        );
+        final devices = device.map(
+          (e) {
+            return Printer(
+              address: e.device.remoteId.str,
+              name: e.device.platformName,
+              connectionType: ConnectionType.BLE,
+              isConnected: e.device.isConnected,
+            );
+          },
+        ).toList();
+        devices.removeWhere(
+            (element) => element.name == null || element.name == '');
+        btlist = devices;
       });
     }
+    List<Printer> list = [];
     if (connectionTypes.contains(ConnectionType.USB)) {
       _usbSubscription?.cancel();
       _usbSubscription =
           Stream.periodic(refreshDuration, (x) => x).listen((event) async {
         final devices =
             await FlutterThermalPrinterPlatform.instance.startUsbScan();
+        List<Printer> templist = [];
         for (var e in devices) {
           final map = Map<String, dynamic>.from(e);
           final device = Printer(
@@ -296,11 +280,18 @@ class OtherBleManager {
           final isConnected =
               await FlutterThermalPrinterPlatform.instance.isConnected(device);
           device.isConnected = isConnected;
-          list.add(device);
+          templist.add(device);
         }
+        list = templist;
       });
-      startUsbListener();
     }
-    _devicesstream.add(list);
+    Stream.periodic(refreshDuration, (x) => x).listen((event) {
+      _devicesstream.add(list + btlist);
+    });
+  }
+
+  Future<dynamic> convertImageToGrayscale(Uint8List? value) async {
+    return await FlutterThermalPrinterPlatform.instance
+        .convertImageToGrayscale(value);
   }
 }

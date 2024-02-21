@@ -46,4 +46,11 @@ class MethodChannelFlutterThermalPrinter extends FlutterThermalPrinterPlatform {
       "productId": device.productId.toString(),
     });
   }
+
+  @override
+  Future<dynamic> convertImageToGrayscale(Uint8List? value) async {
+    return await methodChannel.invokeMethod('convertimage', {
+      "path": List<int>.from(value!),
+    });
+  }
 }

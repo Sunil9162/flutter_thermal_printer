@@ -3,6 +3,7 @@ package com.example.flutter_thermal_printer;
 import static android.content.Context.USB_SERVICE;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -174,5 +175,11 @@ public class UsbPrinter implements EventChannel.StreamHandler{
             return false;
         } 
         return m.hasPermission(device);
+    }
+
+    // Convert image bytes to esc/pos command
+    @TargetApi(Build.VERSION_CODES.O)
+    public List<Integer> convertimage(List<Integer> bytes){
+        return bytes;
     }
 }

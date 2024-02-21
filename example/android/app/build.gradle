@@ -1,6 +1,6 @@
 plugins {
     id "com.android.application" 
-    id "dev.flutter.flutter-gradle-plugin"
+    id "dev.flutter.flutter-gradle-plugin" 
 }
 
 def localProperties = new Properties()
@@ -39,8 +39,9 @@ android {
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionName flutterVersionName 
     }
+    
 
     buildTypes {
         release {

@@ -36,4 +36,9 @@ abstract class FlutterThermalPrinterPlatform extends PlatformInterface {
   Future<bool> isConnected(Printer device) {
     throw UnimplementedError("isConnected() has not been implemented.");
   }
+
+  Future<dynamic> convertImageToGrayscale(Uint8List? value) {
+    throw UnimplementedError(
+        "convertImageToGrayscale() has not been implemented.");
+  }
 }

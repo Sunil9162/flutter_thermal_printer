@@ -26,11 +26,12 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    usbPrinter = new UsbPrinter(context); 
+    
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer");
     eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer/events");
     channel.setMethodCallHandler(this);
     context = flutterPluginBinding.getApplicationContext();
+    usbPrinter = new UsbPrinter(context); 
     eventChannel.setStreamHandler(usbPrinter);
   }
 
@@ -40,7 +41,7 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
       result.success("Android " + android.os.Build.VERSION.RELEASE);
     }else if (call.method.equals("getUsbDevicesList")){
         result.success(usbPrinter.getUsbDevicesList());
-    }else  if (call.method.equals("connect")){
+    }else if (call.method.equals("connect")){
       String vendorId = call.argument("vendorId");
       String productId = call.argument("productId");
       result.success(usbPrinter.connect(vendorId, productId));
@@ -54,6 +55,9 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
         String vendorId = call.argument("vendorId");
         String productId = call.argument("productId");
         result.success(usbPrinter.isConnected(vendorId, productId));
+    } else if (call.method.equals("convertimage")) {
+         List<Integer> path = call.argument("path");
+        result.success(usbPrinter.convertimage(path));
     } else {
       result.notImplemented();
     }

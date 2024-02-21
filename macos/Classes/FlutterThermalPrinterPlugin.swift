@@ -5,7 +5,6 @@ import IOKit
 import IOKit.usb
 import Foundation
 
-
 public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDelegate{
     public func deviceAdded(_ device: io_object_t) {
             print("device added: \(device.name() ?? "<unknown>")")
@@ -39,15 +38,29 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDe
       result("macOS " + ProcessInfo.processInfo.operatingSystemVersionString)
     case "getUsbDevicesList":
         result(getAllUsbDevice())
-    case "connectPrinter":
+    case "connect":
         let args = call.arguments as? [String: Any]
         let vendorID = args?["vendorId"] as? String
         let productID = args?["productId"] as? String
         result(connectPrinter(vendorID: vendorID!, productID: productID!))
     case "printText":
         let args = call.arguments as? [String: Any]
-        printData(args)
-        result("Printing Text")
+        let vendorID = args?["vendorId"] as? String
+        let productID = args?["productId"] as? String
+        let data = args?["data"] as? List<Int>
+
+    case "isConnected":
+        let args = call.arguments as? [String: Any]
+        let vendorID = args?["vendorId"] as? String
+        let productID = args?["productId"] as? String
+   
+        // let device = findUSBDevice(vendorID: UInt16(vendorID!)!, productID: UInt16(productID!)!)
+        // if device != nil {
+        //     result(true)
+        // }else{
+        //     result(false)
+        // }
+        result(true)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -70,23 +83,24 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDe
         return iterator
     }
 
-    public func printData(_ args: [String: Any]?) { 
-       let vendorID = args?["vendorId"] as? String
-       let productID = args?["productId"] as? String
-       let text = args?["text"] as? String
-       let device = findUSBDevice(vendorID: UInt16(vendorID!)!, productID: UInt16(productID!)!)
-       if device != nil {
-           
-           let usbDevice = IOIteratorNext(device!)
-           guard usbDevice != 0 else {
-               print("Failed to open USB device")
-               return
-           }
-          
-       }
+    public func printData(vendorID: String, productID: String, data: Array<Int>) {
+        let device = findUSBDevice(vendorID: UInt16(vendorID)!, productID: UInt16(productID)!)
+        // Print Data on the printer
+        if device != nil {
+            
+            
+        } else { 
+        }
     }
  
-    
+    public func isConnected(vendorID: String, productID: String) -> Bool {
+        let device = findUSBDevice(vendorID: UInt16(vendorID)!, productID: UInt16(productID)!)
+        if device != nil {
+            return true
+        }else{
+            return false
+        }
+    }
      
 
     public func connectPrinter(vendorID: String, productID: String) -> String {

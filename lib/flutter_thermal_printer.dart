@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_thermal_printer/WindowBle/window_ble_manager.dart';
@@ -93,6 +94,15 @@ class FlutterThermalPrinter {
         refreshDuration: refreshDuration,
         connectionTypes: connectionTypes,
       );
+    }
+  }
+
+  Future<dynamic> convertImageToGrayscale(Uint8List? value) async {
+    if (Platform.isWindows) {
+      // return WindowBleManager.instance.convertImageToGrayscale(value);
+      return null;
+    } else {
+      return OtherBleManager.instance.convertImageToGrayscale(value);
     }
   }
 }

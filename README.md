@@ -99,4 +99,12 @@ enum ConnectionType {
   USB,
 }
 
+// Additional Functions
+getPrinters(
+  refreshDuration: Duration,
+  connectionTypes: List<ConnectionType>,
+){
+  
+}
+
 ```

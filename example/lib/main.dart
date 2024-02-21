@@ -81,6 +81,7 @@ class _MyAppState extends State<MyApp> {
                         bytes += generator.text('Hello World');
                         bytes +=
                             generator.text("|||| FLUTTER THERMAL PRINTER ||||");
+
                         bytes += generator.feed(2);
                         bytes += generator.cut();
                         await _flutterThermalPrinterPlugin.printData(
