@@ -1,12 +1,13 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_thermal_printer/flutter_thermal_printer.dart';
-import 'package:flutter_thermal_printer/utils/printer.dart';
+import 'package:thermal_printer/esc_pos_utils_platform/esc_pos_utils_platform.dart';
+// import 'package:flutter_thermal_printer/flutter_thermal_printer.dart';
+// import 'package:flutter_thermal_printer/utils/printer.dart';
+import 'package:thermal_printer/thermal_printer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,24 +21,34 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
+  // final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
 
-  List<Printer> printers = [];
+  // List<Printer> printers = [];
 
-  StreamSubscription<List<Printer>>? _devicesStreamSubscription;
+  // StreamSubscription<List<Printer>>? _devicesStreamSubscription;
 
-  // Get Printer List
+  // // Get Printer List
+  // void startScan() async {
+  //   _devicesStreamSubscription?.cancel();
+  //   await _flutterThermalPrinterPlugin.getPrinters();
+  //   _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
+  //       .listen((List<Printer> event) {
+  //     setState(() {
+  //       printers = event;
+  //       printers.removeWhere((element) =>
+  //           element.name == null ||
+  //           element.name == '' ||
+  //           !element.name!.toLowerCase().contains('print'));
+  //     });
+  //   });
+  // }
+
+  List<PrinterDevice> printers = [];
+
   void startScan() async {
-    _devicesStreamSubscription?.cancel();
-    await _flutterThermalPrinterPlugin.getPrinters();
-    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
-        .listen((List<Printer> event) {
+    PrinterManager.instance.usbPrinterConnector.discovery().listen((event) {
       setState(() {
-        printers = event;
-        printers.removeWhere((element) =>
-            element.name == null ||
-            element.name == '' ||
-            !element.name!.toLowerCase().contains('print'));
+        printers.add(event);
       });
     });
   }
@@ -67,13 +78,18 @@ class _MyAppState extends State<MyApp> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     onTap: () async {
-                      final isConnected = await _flutterThermalPrinterPlugin
-                          .connect(printers[index]);
-                      log("Devices: $isConnected");
+                      final isConnected = await PrinterManager
+                          .instance.usbPrinterConnector
+                          .connect(UsbPrinterInput(
+                        name: printers[index].name,
+                        vendorId: printers[index].vendorId,
+                        productId: printers[index].productId,
+                      ));
+                      log("IsConnected");
                     },
                     title: Text(printers[index].name ?? 'No Name'),
                     subtitle: Text(
-                        "VendorId: ${printers[index].address} - Connected: ${printers[index].isConnected}"),
+                        "VendorId: ${printers[index].address} - Connected: ${printers[index].operatingSystem}"),
                     trailing: IconButton(
                       icon: const Icon(Icons.connect_without_contact),
                       onPressed: () async {
@@ -95,6 +111,7 @@ class _MyAppState extends State<MyApp> {
                         // bytes += generator.imageRaster(imgImage!);
                         // bytes += generator.cut();
                         //Break the data into chunks
+                        PrinterManager.instance.usbPrinterConnector.send(bytes);
                         const chunkSize = 100;
                         log("Bytes: $bytes");
                         // for (var i = 0; i < bytes.length; i += chunkSize) {
@@ -123,7 +140,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  final ScreenshotController screenshotController = ScreenshotController();
+  // final ScreenshotController screenshotController = ScreenshotController();
   Widget receiptWidget() {
     return Container(
         padding: const EdgeInsets.all(8),

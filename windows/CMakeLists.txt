@@ -27,9 +27,6 @@ list(APPEND PLUGIN_SOURCES
 add_library(${PLUGIN_NAME} SHARED
   "include/flutter_thermal_printer/flutter_thermal_printer_plugin_c_api.h"
   "flutter_thermal_printer_plugin_c_api.cpp"
-  "include/printer.cpp"
-  "include/printer.h"
-  "include/utils.hpp"
   ${PLUGIN_SOURCES}
 )
 

@@ -6,9 +6,9 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <flutter_thermal_printer/flutter_thermal_printer_plugin_c_api.h>
+#include <thermal_printer/thermal_printer_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  FlutterThermalPrinterPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("FlutterThermalPrinterPluginCApi"));
+  ThermalPrinterPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("ThermalPrinterPlugin"));
 }

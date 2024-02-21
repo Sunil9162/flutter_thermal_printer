@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_thermal_printer
+  thermal_printer
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
