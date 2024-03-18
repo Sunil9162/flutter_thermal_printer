@@ -83,6 +83,7 @@ class FlutterThermalPrinter {
 
   Future<void> getUsbDevices() async {
     if (Platform.isWindows) {
+      await WindowBleManager.instance.startUsbScan();
     } else {
       await OtherBleManager.instance.startUsbScan();
     }

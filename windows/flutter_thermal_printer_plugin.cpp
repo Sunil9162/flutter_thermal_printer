@@ -13,7 +13,8 @@
 #include <memory>
 #include <sstream>
 #include <stdio.h>
-#include <usbuf.h>
+#include <string>
+#include <list>
 
 namespace flutter_thermal_printer
 {
@@ -105,70 +106,21 @@ namespace flutter_thermal_printer
     }
   }
 
-  class Program
+  static List<USBDeviceInfo> GetUSBDevices()
   {
-    static void Main(string[] args)
+    List<USBDeviceInfo> devices = new List<USBDeviceInfo>();
+
+    using var searcher = new ManagementObjectSearcher(
+        @"Select * From Win32_USBHub");
+    using ManagementObjectCollection collection = searcher.Get();
+
+    foreach (var device in collection)
     {
-      var usbDevices = GetUSBDevices();
-
-      foreach (var usbDevice in usbDevices)
-      {
-        Console.WriteLine(
-            $ "Device ID: {usbDevice.DeviceID}, PNP Device ID: {usbDevice.PnpDeviceID}, Description: {usbDevice.Description}");
-      }
-
-      Console.Read();
+      devices.Add(new USBDeviceInfo(
+          (string)device.GetPropertyValue("DeviceID"),
+          (string)device.GetPropertyValue("PNPDeviceID"),
+          (string)device.GetPropertyValue("Description")));
     }
-
-    static List<USBDeviceInfo> GetUSBDevices()
-    {
-      List<USBDeviceInfo> devices = new List<USBDeviceInfo>();
-
-      using var searcher = new ManagementObjectSearcher(
-          @"Select * From Win32_USBHub");
-      using ManagementObjectCollection collection = searcher.Get();
-
-      foreach (var device in collection)
-      {
-        devices.Add(new USBDeviceInfo(
-            (string)device.GetPropertyValue("DeviceID"),
-            (string)device.GetPropertyValue("PNPDeviceID"),
-            (string)device.GetPropertyValue("Description")));
-      }
-      return devices;
-    }
+    return devices;
   }
-
-  class USBDeviceInfo
-  {
-  public
-    USBDeviceInfo(string deviceID, string pnpDeviceID, string description)
-    {
-      this.DeviceID = deviceID;
-      this.PnpDeviceID = pnpDeviceID;
-      this.Description = description;
-    }
-  public
-    string DeviceID
-    {
-      get;
-    private
-      set;
-    }
-  public
-    string PnpDeviceID
-    {
-      get;
-    private
-      set;
-    }
-  public
-    string Description
-    {
-      get;
-    private
-      set;
-    }
-  }
-
 } // namespace flutter_thermal_printer
