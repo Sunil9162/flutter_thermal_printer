@@ -15,7 +15,8 @@
 #include <stdio.h>
 #include <usbuf.h>
 
-namespace flutter_thermal_printer {
+namespace flutter_thermal_printer
+{
   using flutter::EncodableList;
   using flutter::EncodableMap;
   using flutter::EncodableValue;
@@ -30,147 +31,144 @@ namespace flutter_thermal_printer {
     virtual ~FlutterThermalPrinterPlugin();
 
   private:
-    // Called when a method is called on this plugin's channel from Dart.
     void HandleMethodCall(
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   };
-// static
-void FlutterThermalPrinterPlugin::RegisterWithRegistrar(
-    flutter::PluginRegistrarWindows *registrar) {
-  auto channel =
-      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "flutter_thermal_printer",
-          &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<FlutterThermalPrinterPlugin>();
+  void FlutterThermalPrinterPlugin::RegisterWithRegistrar(
+      flutter::PluginRegistrarWindows *registrar)
+  {
+    auto channel =
+        std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            registrar->messenger(), "flutter_thermal_printer",
+            &flutter::StandardMethodCodec::GetInstance());
 
-  channel->SetMethodCallHandler(
-      [plugin_pointer = plugin.get()](const auto &call, auto result) {
-        plugin_pointer->HandleMethodCall(call, std::move(result));
-      });
+    auto plugin = std::make_unique<FlutterThermalPrinterPlugin>();
 
-  registrar->AddPlugin(std::move(plugin));
-}
+    channel->SetMethodCallHandler(
+        [plugin_pointer = plugin.get()](const auto &call, auto result)
+        {
+          plugin_pointer->HandleMethodCall(call, std::move(result));
+        });
 
-FlutterThermalPrinterPlugin::FlutterThermalPrinterPlugin() {}
-
-FlutterThermalPrinterPlugin::~FlutterThermalPrinterPlugin() {}
-
-void FlutterThermalPrinterPlugin::HandleMethodCall(
-    const flutter::MethodCall<flutter::EncodableValue> &method_call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (method_call.method_name().compare("getPlatformVersion") == 0) {
-    std::ostringstream version_stream;
-    version_stream << "Windows ";
-    if (IsWindows10OrGreater()) {
-      version_stream << "10+";
-    } else if (IsWindows8OrGreater()) {
-      version_stream << "8";
-    } else if (IsWindows7OrGreater()) {
-      version_stream << "7";
-    }
-    result->Success(flutter::EncodableValue(version_stream.str()));
-  } if (method_call.method_name().compare("getUsbDevicesList") == 0) { 
-    // Get the list of USB devices
-    std::vector<std::string> usb_devices;
-    // Get the list of USB devices
-    usb_device_info *devices = NULL;
-    int count = get_usb_devices(&devices);
-    for (int i = 0; i < count; i++) {
-      usb_devices.push_back(devices[i].device_name);
-    }
-    // return the list of USB devices
-    result->Success(flutter::EncodableValue(usb_devices));
+    registrar->AddPlugin(std::move(plugin));
   }
-  else {
-    result->NotImplemented();
+
+  FlutterThermalPrinterPlugin::FlutterThermalPrinterPlugin() {}
+
+  FlutterThermalPrinterPlugin::~FlutterThermalPrinterPlugin() {}
+
+  void FlutterThermalPrinterPlugin::HandleMethodCall(
+      const flutter::MethodCall<flutter::EncodableValue> &method_call,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
+  {
+    if (method_call.method_name().compare("getPlatformVersion") == 0)
+    {
+      std::ostringstream version_stream;
+      version_stream << "Windows ";
+      if (IsWindows10OrGreater())
+      {
+        version_stream << "10+";
+      }
+      else if (IsWindows8OrGreater())
+      {
+        version_stream << "8";
+      }
+      else if (IsWindows7OrGreater())
+      {
+        version_stream << "7";
+      }
+      result->Success(flutter::EncodableValue(version_stream.str()));
+    }
+    if (method_call.method_name().compare("getUsbDevicesList") == 0)
+    {
+      // Call the function to get the USB devices list from the Program class
+      List<USBDeviceInfo> usbDevices = GetUSBDevices();
+      // Create a list of EncodableMap to store the USB devices list
+      EncodableList usbDevicesList;
+      // Loop through the USB devices list and add each device to the usbDevicesList
+      for (auto usbDevice : usbDevices)
+      {
+        EncodableMap usbDeviceMap;
+        usbDeviceMap["DeviceID"] = usbDevice.DeviceID;
+        usbDeviceMap["PnpDeviceID"] = usbDevice.PnpDeviceID;
+        usbDeviceMap["Description"] = usbDevice.Description;
+        usbDevicesList.push_back(EncodableValue(usbDeviceMap));
+      }
+      // Return the usbDevicesList
+      result->Success(usbDevicesList);
+    }
+    else
+    {
+      result->NotImplemented();
+    }
   }
-}
-//  void FlutterThermalPrinterPlugin::HandleMethodCall(
-//       const flutter::MethodCall<EncodableValue> &method_call,
-//       std::unique_ptr<flutter::MethodResult<EncodableValue>> result)
-//   {
-//     // Get arguments the C++ way
-//     const auto *args = std::get_if<EncodableMap>(method_call.arguments());
 
-//     if (method_call.method_name().compare("getUsbDevicesList") == 0)
-//     {
-//       auto printers = PrintManager::listPrinters();
-//       auto list = EncodableList{};
-//       for (auto printer : printers)
-//       {
-//         auto map = EncodableMap{};
-//         map[EncodableValue("name")] =
-//             EncodableValue(printer.name);
-//         map[EncodableValue("model")] =
-//             EncodableValue(printer.model);
-//         map[EncodableValue("default")] =
-//             EncodableValue(printer.default);
-//         map[EncodableValue("available")] =
-//             EncodableValue(printer.available);
-//         list.push_back(map);
-//       }
+  class Program
+  {
+    static void Main(string[] args)
+    {
+      var usbDevices = GetUSBDevices();
 
-//       return result->Success(list);
-//     }
-//     else if (method_call.method_name().compare("connect") == 0)
-//     {
-//       std::string printerName;
+      foreach (var usbDevice in usbDevices)
+      {
+        Console.WriteLine(
+            $ "Device ID: {usbDevice.DeviceID}, PNP Device ID: {usbDevice.PnpDeviceID}, Description: {usbDevice.Description}");
+      }
 
-//       if (args)
-//       {
-//         auto name_it = args->find(EncodableValue("name"));
-//         if (name_it != args->end())
-//         {
-//           printerName = std::get<std::string>(name_it->second);
-//         }
+      Console.Read();
+    }
 
-//         auto success = PrintManager::pickPrinter(printerName);
-//         return result->Success(EncodableValue(success));
-//       }
+    static List<USBDeviceInfo> GetUSBDevices()
+    {
+      List<USBDeviceInfo> devices = new List<USBDeviceInfo>();
 
-//       return result->Success(EncodableValue(false));
-//     }
-//     else if (method_call.method_name().compare("close") == 0)
-//     {
-//       auto success = PrintManager::close();
-//       return result->Success(EncodableValue(success));
-//     }
-//     else if (method_call.method_name().compare("printText") == 0)
-//     {
-//       std::vector<uint8_t> bytes;
+      using var searcher = new ManagementObjectSearcher(
+          @"Select * From Win32_USBHub");
+      using ManagementObjectCollection collection = searcher.Get();
 
-//       if (args)
-//       {
-//         auto bytes_it = args->find(EncodableValue("bytes"));
-//         if (bytes_it != args->end())
-//         {
-//           bytes = std::get<std::vector<uint8_t>>(bytes_it->second);
-//         }
+      foreach (var device in collection)
+      {
+        devices.Add(new USBDeviceInfo(
+            (string)device.GetPropertyValue("DeviceID"),
+            (string)device.GetPropertyValue("PNPDeviceID"),
+            (string)device.GetPropertyValue("Description")));
+      }
+      return devices;
+    }
+  }
 
-//         auto success = PrintManager::printBytes(bytes);
-//         return result->Success(EncodableValue(success));
-//       }
-//     }
-//     else if (method_call.method_name().compare("isConnected") == 0)
-//     {
-//       auto success = true;
-//       return result->Success(EncodableValue(success));
-//     }
-    
-//     else
-//     {
-//       result->NotImplemented();
-//     }
-//   }
+  class USBDeviceInfo
+  {
+  public
+    USBDeviceInfo(string deviceID, string pnpDeviceID, string description)
+    {
+      this.DeviceID = deviceID;
+      this.PnpDeviceID = pnpDeviceID;
+      this.Description = description;
+    }
+  public
+    string DeviceID
+    {
+      get;
+    private
+      set;
+    }
+  public
+    string PnpDeviceID
+    {
+      get;
+    private
+      set;
+    }
+  public
+    string Description
+    {
+      get;
+    private
+      set;
+    }
+  }
 
-}  // namespace flutter_thermal_printer
-
-// void FlutterPosPrinterPluginRegisterWithRegistrar(
-//     FlutterDesktopPluginRegistrarRef registrar)
-// {
-//   FlutterPosPrinterPlugin::RegisterWithRegistrar(
-//       flutter::PluginRegistrarManager::GetInstance()
-//           ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
-// }
+} // namespace flutter_thermal_printer

@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.util.Log;
@@ -141,9 +143,10 @@ public class UsbPrinter implements EventChannel.StreamHandler{
             return;
         }
         UsbDeviceConnection connection = m.openDevice(device);
+
         if (connection == null){
             return;
-        }
+        } 
         connection.claimInterface(device.getInterface(0), true);
         UsbEndpoint mBulkEndOut = null;
         for (int i = 0; i < device.getInterface(0).getEndpointCount(); i++) {
@@ -181,5 +184,29 @@ public class UsbPrinter implements EventChannel.StreamHandler{
     @TargetApi(Build.VERSION_CODES.O)
     public List<Integer> convertimage(List<Integer> bytes){
         return bytes;
+    }
+
+    public boolean disconnect(String vendorId, String productId){
+        UsbManager m = (UsbManager)context.getSystemService(USB_SERVICE);
+        HashMap<String, UsbDevice> usbDevices = m.getDeviceList();
+        UsbDevice device = null;
+        for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet()) {
+            if (String.valueOf(entry.getValue().getVendorId()).equals(vendorId) && String.valueOf(entry.getValue().getProductId()).equals(productId)){
+                device = entry.getValue();
+                break;
+            }
+        }
+        if (device == null){
+            return false;
+        }
+        boolean hasPermission = m.hasPermission(device);
+        if(!hasPermission){
+            return false;
+        }
+        //  Release the interface
+        UsbDeviceConnection connection = m.openDevice(device); 
+        connection.releaseInterface(device.getInterface(0));
+        connection.close(); 
+        return true;
     }
 }

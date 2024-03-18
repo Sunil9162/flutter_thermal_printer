@@ -114,11 +114,13 @@ class OtherBleManager {
   }
 
   Future<void> disconnect(Printer device) async {
-    try {
-      final bt = BluetoothDevice.fromId(device.address!);
-      await bt.disconnect();
-    } catch (e) {
-      log('Failed to disconnect device');
+    if (device.connectionType == ConnectionType.BLE) {
+      try {
+        final bt = BluetoothDevice.fromId(device.address!);
+        await bt.disconnect();
+      } catch (e) {
+        log('Failed to disconnect device');
+      }
     }
   }
 

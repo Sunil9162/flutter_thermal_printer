@@ -67,9 +67,14 @@ class _MyAppState extends State<MyApp> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     onTap: () async {
-                      final isConnected = await _flutterThermalPrinterPlugin
-                          .connect(printers[index]);
-                      log("Devices: $isConnected");
+                      if (printers[index].isConnected ?? false) {
+                        await _flutterThermalPrinterPlugin
+                            .disconnect(printers[index]);
+                      } else {
+                        final isConnected = await _flutterThermalPrinterPlugin
+                            .connect(printers[index]);
+                        log("Devices: $isConnected");
+                      }
                     },
                     title: Text(printers[index].name ?? 'No Name'),
                     subtitle: Text(
@@ -80,37 +85,12 @@ class _MyAppState extends State<MyApp> {
                         final profile = await CapabilityProfile.load();
                         final generator = Generator(PaperSize.mm80, profile);
                         List<int> bytes = [];
-                        // bytes += generator.text('Hello World');
-                        bytes +=
-                            generator.text("|||| FLUTTER THERMAL PRINTER ||||");
-                        // final screenshot =
-                        //     await screenshotController.captureFromWidget(
-                        //   receiptWidget(),
-                        // );
-                        // final img.Image? image = img.decodeImage(screenshot);
-                        // final base64Image = base64Encode(img.encodePng(image!));
-                        // final img.Image? imgImage = img.decodeImage(
-                        //   base64Decode(base64Image),
-                        // );
-                        // bytes += generator.imageRaster(imgImage!);
-                        // bytes += generator.cut();
-                        //Break the data into chunks
-                        const chunkSize = 100;
-                        log("Bytes: $bytes");
-                        // for (var i = 0; i < bytes.length; i += chunkSize) {
-                        //   await Future.delayed(
-                        //       const Duration(milliseconds: 100));
-                        //   await _flutterThermalPrinterPlugin.printData(
-                        //     printers[index],
-                        //     bytes.sublist(
-                        //       i,
-                        //       i + chunkSize > bytes.length
-                        //           ? bytes.length
-                        //           : i + chunkSize,
-                        //     ),
-                        //     longData: true,
-                        //   );
-                        // }
+                        bytes += generator.cut();
+                        await _flutterThermalPrinterPlugin.printData(
+                          printers[index],
+                          bytes,
+                          longData: true,
+                        );
                       },
                     ),
                   );
@@ -123,7 +103,6 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  final ScreenshotController screenshotController = ScreenshotController();
   Widget receiptWidget() {
     return Container(
         padding: const EdgeInsets.all(8),

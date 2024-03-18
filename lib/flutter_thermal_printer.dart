@@ -7,9 +7,8 @@ import 'package:flutter_thermal_printer/utils/printer.dart';
 
 import 'OthersBle/other_ble_manager.dart';
 
-export 'package:esc_pos_utils/esc_pos_utils.dart';
+export 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice;
-export 'package:screenshot/screenshot.dart';
 
 class FlutterThermalPrinter {
   FlutterThermalPrinter._();
@@ -51,6 +50,14 @@ class FlutterThermalPrinter {
       return await WindowBleManager.instance.connect(device);
     } else {
       return await OtherBleManager.instance.connect(device);
+    }
+  }
+
+  Future<void> disconnect(Printer device) async {
+    if (Platform.isWindows) {
+      // await WindowBleManager.instance.disc(device);
+    } else {
+      await OtherBleManager.instance.disconnect(device);
     }
   }
 

@@ -53,4 +53,12 @@ class MethodChannelFlutterThermalPrinter extends FlutterThermalPrinterPlatform {
       "path": List<int>.from(value!),
     });
   }
+
+  @override
+  Future<bool> disconnect(Printer device) async {
+    return await methodChannel.invokeMethod('disconnect', {
+      "vendorId": device.vendorId.toString(),
+      "productId": device.productId.toString(),
+    });
+  }
 }

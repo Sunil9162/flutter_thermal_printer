@@ -84,6 +84,7 @@ This plugin is used to print data on thermal printer.
 | connect printer                | ✅      |     |       |         |
 | print data                     | ✅      |     |       |         |
 
+
 ## Printer Model Class
 ```dart
  String? address;

@@ -1,3 +1,9 @@
+## 0.0.5
+* Added esc_pos_utils_plus for printing 
+
+## 0.0.4
+* Added getPrinter() to get the printers from both USB and Bluetooth
+
 ## 0.0.3
 * Added USB Printer Support for Android 
 
