@@ -94,44 +94,7 @@ class WindowBleManager {
     if (device.connectionType == ConnectionType.USB) {
       using((Arena alloc) {
         final printer = RawPrinter(device.name!, alloc);
-        final data = <String>[
-          '''Dekha hazaro dafa aapko
-Phir bekarari kaisi hai
-Sambhale sambhalta nahi yeh dil
-Kuch pyaar mein baat aisi hai
-
-Lekar ijazat ab aap se
-Saansein yeh aati jati hain
-Dhoondhe se milte nahi hai hum
-Bas aap hi aap baki hain
-
-Pal bhar na doori sahe aap se
-Betabiyan yeh kuch aur hain
-Hum door ho ke bhi paas hain
-Nazdeekiyan yeh kuch aur hain
-
-Dekha hazaro dafaa aapko
-Phir bekarari kaisi hai
-Sambhale sambhalta nahi ye dil
-Kuch pyar mein baat aisi hai
-
-Aagosh mein hain jo aapki
-Aisa sukun aur paaye kahaan
-Aankhein hamein raas aa gayi
-Ab hum yahaan se jaaye kahan
-
-Dekha hazaron dafa aapko
-Phir bekarari kaisi hai
-Sambhale sambhalta nahi ye dil
-Kuch pyaar mein baat aisi hai
-
-Phir bekarari kaisi hai
-Kuch pyaar mein baat aisi hai'''
-        ];
-
-        if (printer.printLines(data)) {
-          log('Success!');
-        }
+        printer.printbytes(bytes);
       });
       return;
     }

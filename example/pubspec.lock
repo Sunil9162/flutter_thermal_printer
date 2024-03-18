@@ -150,7 +150,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.5"
+    version: "0.0.6"
   fuchsia_remote_debug_protocol:
     dependency: transitive
     description: flutter
@@ -337,14 +337,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.2"
-  serial_port_win32:
-    dependency: transitive
-    description:
-      name: serial_port_win32
-      sha256: "5c9047a0690b913121e08b72c6f4ec51a6e4b70a5e3779bd2d5d3f401cc61b58"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.0"
   sky_engine:
     dependency: transitive
     description: flutter

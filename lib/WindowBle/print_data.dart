@@ -103,4 +103,29 @@ class RawPrinter {
 
     return res;
   }
+
+  bool printbytes(List<int> data) {
+    var res = false;
+
+    if (data.isEmpty) {
+      return res;
+    }
+
+    final printerHandle = _startRawPrintJob(
+        printerName: printerName,
+        documentTitle: 'My document',
+        dataType: 'RAW');
+
+    res = _startRawPrintPage(printerHandle);
+
+    for (final item in data) {
+      if (res) {
+        res = _printRawData(printerHandle, String.fromCharCode(item));
+      }
+    }
+    _endRawPrintPage(printerHandle);
+    _endRawPrintJob(printerHandle);
+
+    return res;
+  }
 }
