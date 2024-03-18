@@ -1,5 +1,5 @@
 #include "flutter_thermal_printer_plugin.h"
-
+#pragma once
 // This must be included before many other Windows headers.
 #include <windows.h>
 
@@ -88,14 +88,13 @@ namespace flutter_thermal_printer
     }
     if (method_call.method_name().compare("getUsbDevicesList") == 0)
     {
-      std::vector<USBDeviceInfo> devices = GetUSBDevices();
+      std::map<std::string, std::string> devices = GetUSBDevices();
       EncodableList devicesList;
       for (auto &device : devices)
       {
         EncodableMap deviceMap;
-        deviceMap.insert(std::make_pair(EncodableValue("deviceID"), EncodableValue(device.deviceID)));
-        deviceMap.insert(std::make_pair(EncodableValue("pnpDeviceID"), EncodableValue(device.pnpDeviceID)));
-        deviceMap.insert(std::make_pair(EncodableValue("description"), EncodableValue(device.description)));
+        deviceMap.insert(std::make_pair(EncodableValue("deviceID"), EncodableValue(device.first)));
+        deviceMap.insert(std::make_pair(EncodableValue("description"), EncodableValue(device.second)));
         devicesList.push_back(EncodableValue(deviceMap));
       }
       result->Success(flutter::EncodableValue(devicesList));
@@ -106,162 +105,156 @@ namespace flutter_thermal_printer
     }
   }
 
-} // namespace flutter_thermal_printer
-
-std::vector<USBDeviceInfo> GetUSBDevices()
-{
-  std::vector<USBDeviceInfo> devices;
-
-  HRESULT hr;
-  IWbemLocator *pLoc = nullptr;
-  IWbemServices *pSvc = nullptr;
-  IEnumWbemClassObject *pEnumerator = nullptr;
-
-  // Initialize COM
-  hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-  if (FAILED(hr))
+  std::map<std::string, std::string> GetUSBDevices()
   {
-    std::cerr << "Failed to initialize COM library. Error code: " << hr << std::endl;
-    return devices;
-  }
+    std::map<std::string, std::string> devices;
 
-  // Initialize security
-  hr = CoInitializeSecurity(
-      nullptr,
-      -1,
-      nullptr,
-      nullptr,
-      RPC_C_AUTHN_LEVEL_DEFAULT,
-      RPC_C_IMP_LEVEL_IMPERSONATE,
-      nullptr,
-      EOAC_NONE,
-      nullptr);
-  if (FAILED(hr))
-  {
-    CoUninitialize();
-    std::cerr << "Failed to initialize security. Error code: " << hr << std::endl;
-    return devices;
-  }
+    HRESULT hr;
+    IWbemLocator *pLoc = nullptr;
+    IWbemServices *pSvc = nullptr;
+    IEnumWbemClassObject *pEnumerator = nullptr;
 
-  // Obtain the initial locator to WMI
-  hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<LPVOID *>(&pLoc));
-  if (FAILED(hr))
-  {
-    CoUninitialize();
-    std::cerr << "Failed to create IWbemLocator object. Error code: " << hr << std::endl;
-    return devices;
-  }
+    // Initialize COM
+    hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+    {
+      std::cerr << "Failed to initialize COM library. Error code: " << hr << std::endl;
+      return devices;
+    }
 
-  // Connect to WMI through the IWbemLocator::ConnectServer method
-  hr = pLoc->ConnectServer(
-      _bstr_t(L"ROOT\\CIMV2"), // Namespace
-      nullptr,                 // User name
-      nullptr,                 // User password
-      0,                       // Locale
-      0,                       // Security flags
-      0,                       // Authority
-      0,                       // Context object
-      &pSvc);                  // IWbemServices proxy
-  if (FAILED(hr))
-  {
-    pLoc->Release();
-    CoUninitialize();
-    std::cerr << "Failed to connect to WMI namespace. Error code: " << hr << std::endl;
-    return devices;
-  }
+    // Initialize security
+    hr = CoInitializeSecurity(
+        nullptr,
+        -1,
+        nullptr,
+        nullptr,
+        RPC_C_AUTHN_LEVEL_DEFAULT,
+        RPC_C_IMP_LEVEL_IMPERSONATE,
+        nullptr,
+        EOAC_NONE,
+        nullptr);
+    if (FAILED(hr))
+    {
+      CoUninitialize();
+      std::cerr << "Failed to initialize security. Error code: " << hr << std::endl;
+      return devices;
+    }
 
-  // Set security levels on the proxy
-  hr = CoSetProxyBlanket(
-      pSvc,
-      RPC_C_AUTHN_WINNT,
-      RPC_C_AUTHZ_NONE,
-      nullptr,
-      RPC_C_AUTHN_LEVEL_CALL,
-      RPC_C_IMP_LEVEL_IMPERSONATE,
-      nullptr,
-      EOAC_NONE);
-  if (FAILED(hr))
-  {
+    // Obtain the initial locator to WMI
+    hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<LPVOID *>(&pLoc));
+    if (FAILED(hr))
+    {
+      CoUninitialize();
+      std::cerr << "Failed to create IWbemLocator object. Error code: " << hr << std::endl;
+      return devices;
+    }
+
+    // Connect to WMI through the IWbemLocator::ConnectServer method
+    hr = pLoc->ConnectServer(
+        _bstr_t(L"ROOT\\CIMV2"), // Namespace
+        nullptr,                 // User name
+        nullptr,                 // User password
+        0,                       // Locale
+        0,                       // Security flags
+        0,                       // Authority
+        0,                       // Context object
+        &pSvc);                  // IWbemServices proxy
+    if (FAILED(hr))
+    {
+      pLoc->Release();
+      CoUninitialize();
+      std::cerr << "Failed to connect to WMI namespace. Error code: " << hr << std::endl;
+      return devices;
+    }
+
+    // Set security levels on the proxy
+    hr = CoSetProxyBlanket(
+        pSvc,
+        RPC_C_AUTHN_WINNT,
+        RPC_C_AUTHZ_NONE,
+        nullptr,
+        RPC_C_AUTHN_LEVEL_CALL,
+        RPC_C_IMP_LEVEL_IMPERSONATE,
+        nullptr,
+        EOAC_NONE);
+    if (FAILED(hr))
+    {
+      pSvc->Release();
+      pLoc->Release();
+      CoUninitialize();
+      std::cerr << "Failed to set proxy blanket. Error code: " << hr << std::endl;
+      return devices;
+    }
+
+    // Use the IWbemServices pointer to make requests of WMI
+    hr = pSvc->ExecQuery(
+        bstr_t("WQL"),
+        bstr_t("SELECT * FROM Win32_USBHub"),
+        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+        nullptr,
+        &pEnumerator);
+    if (FAILED(hr))
+    {
+      pSvc->Release();
+      pLoc->Release();
+      CoUninitialize();
+      std::cerr << "Query for Win32_USBHub failed. Error code: " << hr << std::endl;
+      return devices;
+    }
+
+    // Iterate over the query results
+    while (pEnumerator)
+    {
+      IWbemClassObject *pclsObj = nullptr;
+      ULONG uReturn = 0;
+
+      hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
+      if (0 == uReturn)
+      {
+        break;
+      }
+
+      VARIANT vtProp;
+
+      // Get the value of the "DeviceID" property
+      hr = pclsObj->Get(L"DeviceID", 0, &vtProp, 0, 0);
+      std::string deviceID;
+      if (SUCCEEDED(hr))
+      {
+        deviceID = _bstr_t(vtProp.bstrVal);
+        VariantClear(&vtProp);
+      }
+
+      // Get the value of the "PNPDeviceID" property
+      hr = pclsObj->Get(L"PNPDeviceID", 0, &vtProp, 0, 0);
+      std::string pnpDeviceID;
+      if (SUCCEEDED(hr))
+      {
+        pnpDeviceID = _bstr_t(vtProp.bstrVal);
+        VariantClear(&vtProp);
+      }
+
+      // Get the value of the "Description" property
+      hr = pclsObj->Get(L"Description", 0, &vtProp, 0, 0);
+      std::string description;
+      if (SUCCEEDED(hr))
+      {
+        description = _bstr_t(vtProp.bstrVal);
+        VariantClear(&vtProp);
+      }
+
+      // devices.push_back({deviceID, pnpDeviceID, description});
+      devices.insert(std::make_pair(deviceID, pnpDeviceID + " : " + description));
+
+      pclsObj->Release();
+    }
+
+    pEnumerator->Release();
     pSvc->Release();
     pLoc->Release();
     CoUninitialize();
-    std::cerr << "Failed to set proxy blanket. Error code: " << hr << std::endl;
+
     return devices;
   }
 
-  // Use the IWbemServices pointer to make requests of WMI
-  hr = pSvc->ExecQuery(
-      bstr_t("WQL"),
-      bstr_t("SELECT * FROM Win32_USBHub"),
-      WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-      nullptr,
-      &pEnumerator);
-  if (FAILED(hr))
-  {
-    pSvc->Release();
-    pLoc->Release();
-    CoUninitialize();
-    std::cerr << "Query for Win32_USBHub failed. Error code: " << hr << std::endl;
-    return devices;
-  }
-
-  // Iterate over the query results
-  while (pEnumerator)
-  {
-    IWbemClassObject *pclsObj = nullptr;
-    ULONG uReturn = 0;
-
-    hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
-    if (0 == uReturn)
-    {
-      break;
-    }
-
-    VARIANT vtProp;
-
-    // Get the value of the "DeviceID" property
-    hr = pclsObj->Get(L"DeviceID", 0, &vtProp, 0, 0);
-    std::string deviceID;
-    if (SUCCEEDED(hr))
-    {
-      deviceID = _bstr_t(vtProp.bstrVal);
-      VariantClear(&vtProp);
-    }
-
-    // Get the value of the "PNPDeviceID" property
-    hr = pclsObj->Get(L"PNPDeviceID", 0, &vtProp, 0, 0);
-    std::string pnpDeviceID;
-    if (SUCCEEDED(hr))
-    {
-      pnpDeviceID = _bstr_t(vtProp.bstrVal);
-      VariantClear(&vtProp);
-    }
-
-    // Get the value of the "Description" property
-    hr = pclsObj->Get(L"Description", 0, &vtProp, 0, 0);
-    std::string description;
-    if (SUCCEEDED(hr))
-    {
-      description = _bstr_t(vtProp.bstrVal);
-      VariantClear(&vtProp);
-    }
-
-    devices.push_back({deviceID, pnpDeviceID, description});
-
-    pclsObj->Release();
-  }
-
-  pEnumerator->Release();
-  pSvc->Release();
-  pLoc->Release();
-  CoUninitialize();
-
-  return devices;
 }
-
-struct USBDeviceInfo
-{
-  std::string deviceID;
-  std::string pnpDeviceID;
-  std::string description;
-};
