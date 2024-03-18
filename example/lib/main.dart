@@ -32,6 +32,7 @@ class _MyAppState extends State<MyApp> {
     await _flutterThermalPrinterPlugin.getPrinters();
     _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
         .listen((List<Printer> event) {
+      log(event.map((e) => e.name).toList().toString());
       setState(() {
         printers = event;
         printers.removeWhere((element) =>
@@ -42,9 +43,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void getUsbDevices() async {
-    await _flutterThermalPrinterPlugin.getUsbDevices();
-  }
+  // void getUsbDevices() async {
+  //   await _flutterThermalPrinterPlugin.getUsbDevices();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +62,8 @@ class _MyAppState extends State<MyApp> {
           children: [
             ElevatedButton(
               onPressed: () {
-                // startScan();
-                getUsbDevices();
+                startScan();
+                // getUsbDevices();
               },
               child: const Text('Get Printers'),
             ),

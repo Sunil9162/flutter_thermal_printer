@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:typed_data';
 
-import 'package:flutter_thermal_printer/flutter_thermal_printer_platform_interface.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
+import 'package:serial_port_win32/serial_port_win32.dart';
 import 'package:win_ble/win_ble.dart';
 import 'package:win_ble/win_file.dart';
 
@@ -134,7 +134,7 @@ class WindowBleManager {
 
   // Get usb Devices
   Future<void> startUsbScan() async {
-    final data = await FlutterThermalPrinterPlatform.instance.startUsbScan();
-    log("Usb Printers: $data");
+    final data = SerialPort.getAvailablePorts();
+    log(data.toString());
   }
 }
