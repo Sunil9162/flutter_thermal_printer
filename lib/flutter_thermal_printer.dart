@@ -83,7 +83,11 @@ class FlutterThermalPrinter {
 
   Future<void> getUsbDevices() async {
     if (Platform.isWindows) {
-      await WindowBleManager.instance.startUsbScan();
+      WindowBleManager.instance.getPrinters(
+        connectionTypes: [
+          ConnectionType.USB,
+        ],
+      );
     } else {
       await OtherBleManager.instance.startUsbScan();
     }
@@ -97,7 +101,10 @@ class FlutterThermalPrinter {
     ],
   }) async {
     if (Platform.isWindows) {
-      // await WindowBleManager.instance.getPrinters();
+      WindowBleManager.instance.getPrinters(
+        refreshDuration: refreshDuration,
+        connectionTypes: connectionTypes,
+      );
     } else {
       OtherBleManager.instance.getPrinters(
         refreshDuration: refreshDuration,

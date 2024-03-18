@@ -1,3 +1,7 @@
+## 0.0.6
+* Added USB Printing for Windows Devices
+* Read Take Care Of part at below in Readme for More.
+
 ## 0.0.5
 * Added esc_pos_utils_plus for printing 
 

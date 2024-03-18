@@ -43,9 +43,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // void getUsbDevices() async {
-  //   await _flutterThermalPrinterPlugin.getUsbDevices();
-  // }
+  void getUsbDevices() async {
+    await _flutterThermalPrinterPlugin.getUsbDevices();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,6 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               onPressed: () {
                 startScan();
-                // getUsbDevices();
               },
               child: const Text('Get Printers'),
             ),

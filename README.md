@@ -10,11 +10,30 @@ This plugin is used to print data on thermal printer.
 
 | Service                        | Android | iOS | macOS | Windows |
 | ------------------------------ | :-----: | :-: | :---: |:-----:  |
-| Bluetooth                      | ✅      | ✅  | ✅    | ✅      |
-| USB                            | ✅      |     |       |         |
+| Bluetooth                      | ✅      | ✅ | ✅    | ✅     |
+| USB                            | ✅      |     |       | ✅     |
 
 ```dart
+
  final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
+
+
+  // Enum ConnectionType
+  enum ConnectionType {
+    BLE,
+    USB,
+  }
+
+  // Additional Functions
+  // Recommended Function for getting printers
+  getPrinters(
+    refreshDuration: Duration,
+    connectionTypes: List<ConnectionType>,
+  ){
+    // Supports WINDOWS, ANDROID for USB
+    // MAC, IOS, ANDROID, WINDOWS for BLUETOOTH.
+  }
+
 
   List<Printer> bleDevices = [];
 
@@ -94,18 +113,14 @@ This plugin is used to print data on thermal printer.
   String? vendorId;
   String? productId;
 
-// Enum ConnectionType
-enum ConnectionType {
-  BLE,
-  USB,
-}
 
-// Additional Functions
-getPrinters(
-  refreshDuration: Duration,
-  connectionTypes: List<ConnectionType>,
-){
-  
-}
 
 ```
+
+## Take Care OF
+
+Printers of Widows will only work if you have the POS-X driver installed on Windows.
+
+Download Driver from Here:
+
+https://pos-x.com/download/thermal-receipt-printer-driver-2/
