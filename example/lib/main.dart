@@ -90,6 +90,12 @@ class _MyAppState extends State<MyApp> {
                         final profile = await CapabilityProfile.load();
                         final generator = Generator(PaperSize.mm80, profile);
                         List<int> bytes = [];
+                        bytes += generator.text("Sunil Kumar",
+                            styles: const PosStyles(
+                              bold: true,
+                              height: PosTextSize.size3,
+                              width: PosTextSize.size3,
+                            ));
                         bytes += generator.cut();
                         await _flutterThermalPrinterPlugin.printData(
                           printers[index],
