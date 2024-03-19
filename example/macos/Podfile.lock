@@ -3,12 +3,12 @@ PODS:
     - FlutterMacOS
   - flutter_thermal_printer (0.0.1):
     - FlutterMacOS
-    - ORSSerialPort (~> 2.1)
+    - USBDeviceSwift (~> 1.0.3)
   - FlutterMacOS (1.0.0)
-  - ORSSerialPort (2.1)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - USBDeviceSwift (1.0.3)
 
 DEPENDENCIES:
   - flutter_blue_plus (from `Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos`)
@@ -18,7 +18,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - ORSSerialPort
+    - USBDeviceSwift
 
 EXTERNAL SOURCES:
   flutter_blue_plus:
@@ -32,11 +32,11 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   flutter_blue_plus: e2868679021f19d12a8c0c58a33f1df66ec7fa6a
-  flutter_thermal_printer: 2f21f43eafe9b75debdbfc7a00edd65960775cb0
+  flutter_thermal_printer: a71d9d3626d729991a38cc27ef7bb0e7dea67885
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  ORSSerialPort: d2d5d131797453430c557ba8dc7dcbcae20ff2e5
   path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
+  USBDeviceSwift: b9e85b70d8a78a2f4196881d7b673b7a8b9d117a
 
-PODFILE CHECKSUM: 5853e122b3caf3b79f4e6c0358a5a5679d560b5f
+PODFILE CHECKSUM: ebbac5529cc316622dbd5af479f7b39cdd10c82d
 
 COCOAPODS: 1.14.2

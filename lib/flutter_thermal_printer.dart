@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_thermal_printer/WindowBle/window_ble_manager.dart';
+import 'package:flutter_thermal_printer/Windows/window_printer_manager.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 
-import 'OthersBle/other_ble_manager.dart';
+import 'Others/other_printers_manager.dart';
 
 export 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice;
@@ -23,33 +23,33 @@ class FlutterThermalPrinter {
 
   Stream<List<Printer>> get devicesStream {
     if (Platform.isWindows) {
-      return WindowBleManager.instance.devicesStream;
+      return WindowPrinterManager.instance.devicesStream;
     } else {
-      return OtherBleManager.instance.devicesStream;
+      return OtherPrinterManager.instance.devicesStream;
     }
   }
 
   Future<void> startScan() async {
     if (Platform.isWindows) {
-      await WindowBleManager.instance.startscan();
+      await WindowPrinterManager.instance.startscan();
     } else {
-      await OtherBleManager.instance.startScan();
+      await OtherPrinterManager.instance.startScan();
     }
   }
 
   Future<void> stopScan() async {
     if (Platform.isWindows) {
-      await WindowBleManager.instance.stopscan();
+      await WindowPrinterManager.instance.stopscan();
     } else {
-      await OtherBleManager.instance.stopScan();
+      await OtherPrinterManager.instance.stopScan();
     }
   }
 
   Future<bool> connect(Printer device) async {
     if (Platform.isWindows) {
-      return await WindowBleManager.instance.connect(device);
+      return await WindowPrinterManager.instance.connect(device);
     } else {
-      return await OtherBleManager.instance.connect(device);
+      return await OtherPrinterManager.instance.connect(device);
     }
   }
 
@@ -57,7 +57,7 @@ class FlutterThermalPrinter {
     if (Platform.isWindows) {
       // await WindowBleManager.instance.disc(device);
     } else {
-      await OtherBleManager.instance.disconnect(device);
+      await OtherPrinterManager.instance.disconnect(device);
     }
   }
 
@@ -67,13 +67,13 @@ class FlutterThermalPrinter {
     bool longData = false,
   }) async {
     if (Platform.isWindows) {
-      return await WindowBleManager.instance.printData(
+      return await WindowPrinterManager.instance.printData(
         device,
         bytes,
         longData: longData,
       );
     } else {
-      return await OtherBleManager.instance.printData(
+      return await OtherPrinterManager.instance.printData(
         device,
         bytes,
         longData: longData,
@@ -83,13 +83,13 @@ class FlutterThermalPrinter {
 
   Future<void> getUsbDevices() async {
     if (Platform.isWindows) {
-      WindowBleManager.instance.getPrinters(
+      WindowPrinterManager.instance.getPrinters(
         connectionTypes: [
           ConnectionType.USB,
         ],
       );
     } else {
-      await OtherBleManager.instance.startUsbScan();
+      await OtherPrinterManager.instance.startUsbScan();
     }
   }
 
@@ -101,12 +101,12 @@ class FlutterThermalPrinter {
     ],
   }) async {
     if (Platform.isWindows) {
-      WindowBleManager.instance.getPrinters(
+      WindowPrinterManager.instance.getPrinters(
         refreshDuration: refreshDuration,
         connectionTypes: connectionTypes,
       );
     } else {
-      OtherBleManager.instance.getPrinters(
+      OtherPrinterManager.instance.getPrinters(
         refreshDuration: refreshDuration,
         connectionTypes: connectionTypes,
       );
@@ -118,7 +118,7 @@ class FlutterThermalPrinter {
       // return WindowBleManager.instance.convertImageToGrayscale(value);
       return null;
     } else {
-      return OtherBleManager.instance.convertImageToGrayscale(value);
+      return OtherPrinterManager.instance.convertImageToGrayscale(value);
     }
   }
 }

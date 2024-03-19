@@ -62,7 +62,8 @@ class _MyAppState extends State<MyApp> {
           children: [
             ElevatedButton(
               onPressed: () {
-                startScan();
+                // startScan();
+                getUsbDevices();
               },
               child: const Text('Get Printers'),
             ),

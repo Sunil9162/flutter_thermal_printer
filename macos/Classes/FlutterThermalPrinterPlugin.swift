@@ -4,8 +4,9 @@ import IOUSBHost
 import IOKit
 import IOKit.usb
 import Foundation
-
-public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDelegate{
+import USBDeviceSwift
+ 
+public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDelegate, FlutterEventChannel{
     public func deviceAdded(_ device: io_object_t) {
             print("device added: \(device.name() ?? "<unknown>")")
             if let usbDevice = device.getInfo() {
@@ -45,10 +46,10 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDe
         result(connectPrinter(vendorID: vendorID!, productID: productID!))
     case "printText":
         let args = call.arguments as? [String: Any]
-        let vendorID = args?["vendorId"] as? String
-        let productID = args?["productId"] as? String
-        let data = args?["data"] as? Array<Int>
-
+        let vendorID = args?["vendorId"] as? String ?? "0"
+        let productID = args?["productId"] as? String ?? "0"
+        let data = args?["data"] as? Array<Int> ??  []
+        printData(vendorID: vendorID, productID: productID, data: data)
     case "isConnected":
         let args = call.arguments as? [String: Any]
         let vendorID = args?["vendorId"] as? String
@@ -145,20 +146,22 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin , USBWatcherDe
     
     public func getAllUsbDevice() -> [[String: Any]]{
         var usbDevices: [[String: Any]] = []
-        // Get All USB Devices connected to the system
-        let matchingDictionary = IOServiceMatching(kIOUSBDeviceClassName)
-        var iterator: io_iterator_t = 0
-        let kr = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDictionary, &iterator)
-        if kr == kIOReturnSuccess {
-            var usbDevice = IOIteratorNext(iterator)
-            while usbDevice != 0 {
-                usbDevices.append(getDeviceDetails(usbDevice: usbDevice))
-                usbDevice = IOIteratorNext(iterator)
-            }
-        } else {
-            // Handle error
-        }
-        IOObjectRelease(iterator)
+//        // Get All USB Devices connected to the system
+//        let matchingDictionary = IOServiceMatching(kIOUSBDeviceClassName)
+//        var iterator: io_iterator_t = 0
+//        let kr = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDictionary, &iterator)
+//        if kr == kIOReturnSuccess {
+//            var usbDevice = IOIteratorNext(iterator)
+//            while usbDevice != 0 {
+//                usbDevices.append(getDeviceDetails(usbDevice: usbDevice))
+//                usbDevice = IOIteratorNext(iterator)
+//            }
+//        } else {
+//            // Handle error
+//        }
+//        IOObjectRelease(iterator)
+        let devices = USBDevice.all;
+        
         return usbDevices
     }
 

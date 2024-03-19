@@ -11,13 +11,13 @@ import 'package:win_ble/win_file.dart';
 import 'print_data.dart';
 import 'printers_data.dart';
 
-class WindowBleManager {
-  WindowBleManager._privateConstructor();
+class WindowPrinterManager {
+  WindowPrinterManager._privateConstructor();
 
-  static WindowBleManager? _instance;
+  static WindowPrinterManager? _instance;
 
-  static WindowBleManager get instance {
-    _instance ??= WindowBleManager._privateConstructor();
+  static WindowPrinterManager get instance {
+    _instance ??= WindowPrinterManager._privateConstructor();
     return _instance!;
   }
 

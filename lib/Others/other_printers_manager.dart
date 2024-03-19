@@ -7,13 +7,13 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_thermal_printer/flutter_thermal_printer_platform_interface.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 
-class OtherBleManager {
-  OtherBleManager._privateConstructor();
+class OtherPrinterManager {
+  OtherPrinterManager._privateConstructor();
 
-  static OtherBleManager? _instance;
+  static OtherPrinterManager? _instance;
 
-  static OtherBleManager get instance {
-    _instance ??= OtherBleManager._privateConstructor();
+  static OtherPrinterManager get instance {
+    _instance ??= OtherPrinterManager._privateConstructor();
     return _instance!;
   }
 
