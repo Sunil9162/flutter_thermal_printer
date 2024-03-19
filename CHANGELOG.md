@@ -1,3 +1,6 @@
+## 0.0.7
+* Removed test printing from the example
+
 ## 0.0.6
 * Added USB Printing for Windows Devices
 * Read Take Care Of part at below in Readme for More.
