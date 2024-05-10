@@ -1,3 +1,6 @@
+## 0.0.11
+* Some Bugs Fixed in MacOs
+
 ## 0.0.10
 * Some Bugs Fixed in MacOs
 
