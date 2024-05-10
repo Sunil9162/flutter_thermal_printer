@@ -53,6 +53,22 @@ public struct USBDevice {
         self.serialNr = serialNr
         self.bsdPath = bsdPath
         
+    } 
+
+    
+
+    // TO Dictinary
+    public func toDictionary() -> Dictionary<String, Any> {
+        var dict = Dictionary<String, Any>()
+        dict["id"] = self.id
+        dict["vendorId"] = self.vendorId
+        dict["productId"] = self.productId
+        dict["name"] = self.name
+        dict["locationId"] = self.locationId
+        dict["vendorName"] = self.vendorName
+        dict["serialNr"] = self.serialNr
+        dict["bsdPath"] = self.bsdPath
+        return dict
     }
 }
 
@@ -255,11 +271,13 @@ extension io_object_t {
             }
             
         }
-        if let deviceBSDName_cf = IORegistryEntrySearchCFProperty (self,
-                                                                   kIOServicePlane,
-                                                                   kIOCalloutDeviceKey as CFString,
-                                                                   kCFAllocatorDefault,
-                                                                   UInt32(kIORegistryIterateRecursively )){
+        if let deviceBSDName_cf = IORegistryEntrySearchCFProperty(
+            self,
+            kIOServicePlane,
+            kIOCalloutDeviceKey as CFString,
+            kCFAllocatorDefault,
+            UInt32(kIORegistryIterateRecursively)
+        ){
             
             
             _bsdPath = "\(deviceBSDName_cf)"

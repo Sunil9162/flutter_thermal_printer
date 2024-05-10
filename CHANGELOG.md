@@ -1,3 +1,12 @@
+## 0.0.10
+* Some Bugs Fixed in MacOs
+
+## 0.0.9
+* Added Getting USB Devices for MacOs
+
+## 0.0.8
+* Updated Bluetooth Services Package
+
 ## 0.0.7
 * Removed test printing from the example
 

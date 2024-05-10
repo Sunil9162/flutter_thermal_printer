@@ -43,6 +43,22 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
+        .listen((List<Printer> event) {
+      log(event.map((e) => e.name).toList().toString());
+      setState(() {
+        printers = event;
+        printers.removeWhere((element) =>
+            element.name == null ||
+            element.name == '' ||
+            !element.name!.toLowerCase().contains('print'));
+      });
+    });
+  }
+
   void getUsbDevices() async {
     await _flutterThermalPrinterPlugin.getUsbDevices();
   }

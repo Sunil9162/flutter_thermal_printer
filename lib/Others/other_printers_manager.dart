@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -135,6 +136,7 @@ class OtherPrinterManager {
         await FlutterThermalPrinterPlatform.instance.printText(
           printer,
           Uint8List.fromList(bytes),
+          path: printer.address,
         );
       } catch (e) {
         log("FlutterThermalPrinter: Unable to Print Data $e");
@@ -191,43 +193,42 @@ class OtherPrinterManager {
     }
   }
 
-  startUsbListener() {
-    _eventChannel = EventChannel(channelName);
-    _eventChannel?.receiveBroadcastStream().listen((event) {
-      log('USB Event: $event');
-    });
-  }
-
   StreamSubscription? _usbSubscription;
 
   // USB
   Future<dynamic> startUsbScan({
     Duration refreshDuration = const Duration(seconds: 5),
   }) async {
-    _usbSubscription?.cancel();
-    startUsbListener();
-    _usbSubscription =
-        Stream.periodic(refreshDuration, (x) => x).listen((event) async {
-      List<Printer> list = [];
-      final devices =
-          await FlutterThermalPrinterPlatform.instance.startUsbScan();
-      for (var e in devices) {
-        final map = Map<String, dynamic>.from(e);
-        final device = Printer(
-          vendorId: map['vendorId'],
-          productId: map['productId'],
-          name: map['name'],
-          connectionType: ConnectionType.USB,
-          address: map['vendorId'],
-          isConnected: false,
-        );
-        final isConnected =
-            await FlutterThermalPrinterPlatform.instance.isConnected(device);
-        device.isConnected = isConnected;
-        list.add(device);
-      }
-      _devicesstream.add(list);
-    });
+    if (Platform.isAndroid || Platform.isMacOS) {
+      _usbSubscription?.cancel();
+      _usbSubscription =
+          Stream.periodic(refreshDuration, (x) => x).listen((event) async {
+        List<Printer> list = [];
+        final devices =
+            await FlutterThermalPrinterPlatform.instance.startUsbScan();
+        for (var e in devices) {
+          final map =
+              Map<String, dynamic>.from(e is String ? jsonDecode(e) : e);
+          // log('Map: $map');
+          final device = Printer(
+            vendorId: map['vendorId']?.toString(),
+            productId: map['productId']?.toString(),
+            name: map['name']?.toString(),
+            connectionType: ConnectionType.USB,
+            address: map['bsdPath']?.toString() ?? map['vendorId']?.toString(),
+            isConnected: false,
+          );
+          final isConnected =
+              await FlutterThermalPrinterPlatform.instance.isConnected(device);
+          device.isConnected = isConnected;
+          list.add(device);
+        }
+        _devicesstream.add(list);
+      });
+      return;
+    } else {
+      throw Exception('Unsupported Platform');
+    }
   }
 
   // Get Printers from BT and USB

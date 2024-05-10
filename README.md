@@ -10,8 +10,8 @@ This plugin is used to print data on thermal printer.
 
 | Service                        | Android | iOS | macOS | Windows |
 | ------------------------------ | :-----: | :-: | :---: |:-----:  |
-| Bluetooth                      | ✅      | ✅ | ✅    | ✅     |
-| USB                            | ✅      |     |       | ✅     |
+| Bluetooth                      | ✅      | ✅  | ✅    | ✅     |
+| USB                            | ✅      |     | ✅    | ✅     |
 
 ```dart
 
@@ -98,10 +98,10 @@ This plugin is used to print data on thermal printer.
 
 | Feature                        | Android | iOS | macOS | Windows |
 | ------------------------------ | :-----: | :-: | :---: |:-----:  |
-| Start scanning                 | ✅      |     |       |         |
-| stop scanning                  | ✅      |     |       |         |
-| connect printer                | ✅      |     |       |         |
-| print data                     | ✅      |     |       |         |
+| Start scanning                 | ✅      |     |  ✅   | ✅      |
+| stop scanning                  | ✅      |     |       | ✅      |
+| connect printer                | ✅      |     |       | ✅      |
+| print data                     | ✅      |     |       | ✅      |
 
 
 ## Printer Model Class

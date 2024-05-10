@@ -31,11 +31,12 @@ class MethodChannelFlutterThermalPrinter extends FlutterThermalPrinterPlatform {
   }
 
   @override
-  Future<bool> printText(Printer device, Uint8List data) async {
+  Future<bool> printText(Printer device, Uint8List data, {String? path}) async {
     return await methodChannel.invokeMethod('printText', {
       "vendorId": device.vendorId.toString(),
       "productId": device.productId.toString(),
       "data": List<int>.from(data),
+      "path": path ?? "",
     });
   }
 
