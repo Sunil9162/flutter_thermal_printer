@@ -268,7 +268,8 @@ class OtherPrinterManager {
             await FlutterThermalPrinterPlatform.instance.startUsbScan();
         List<Printer> templist = [];
         for (var e in devices) {
-          final map = Map<String, dynamic>.from(e);
+          final map =
+              Map<String, dynamic>.from(e is String ? jsonDecode(e) : e);
           final device = Printer(
             vendorId: map['vendorId'],
             productId: map['productId'],
