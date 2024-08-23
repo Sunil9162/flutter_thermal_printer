@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_libserialport
+  bluetooth_low_energy_windows
   flutter_thermal_printer
 )
 

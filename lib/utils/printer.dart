@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
 class Printer {
   String? address;
   String? name;
@@ -49,4 +51,27 @@ class Printer {
 enum ConnectionType {
   BLE,
   USB,
+}
+
+extension PrinterExtension on Printer {
+  String get connectionTypeString {
+    switch (connectionType) {
+      case ConnectionType.BLE:
+        return 'BLE';
+      case ConnectionType.USB:
+        return 'USB';
+      default:
+        return '';
+    }
+  }
+
+  Stream<BluetoothConnectionState> get connectionState {
+    if (connectionType != ConnectionType.BLE) {
+      throw UnsupportedError('Only BLE printers are supported');
+    }
+    if (address == null) {
+      throw ArgumentError('Address is required for BLE printers');
+    }
+    return BluetoothDevice.fromId(address!).connectionState;
+  }
 }

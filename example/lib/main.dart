@@ -29,34 +29,42 @@ class _MyAppState extends State<MyApp> {
   // Get Printer List
   void startScan() async {
     _devicesStreamSubscription?.cancel();
-    await _flutterThermalPrinterPlugin.getPrinters();
+    await _flutterThermalPrinterPlugin.getPrinters(connectionTypes: [
+      ConnectionType.USB,
+    ]);
     _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
         .listen((List<Printer> event) {
       log(event.map((e) => e.name).toList().toString());
       setState(() {
         printers = event;
-        printers.removeWhere((element) =>
-            element.name == null ||
-            element.name == '' ||
-            !element.name!.toLowerCase().contains('print'));
+        printers
+            .removeWhere((element) => element.name == null || element.name == ''
+                //  ||
+                // !element.name!.toLowerCase().contains('print')
+                );
       });
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
-        .listen((List<Printer> event) {
-      log(event.map((e) => e.name).toList().toString());
-      setState(() {
-        printers = event;
-        printers.removeWhere((element) =>
-            element.name == null ||
-            element.name == '' ||
-            !element.name!.toLowerCase().contains('print'));
-      });
-    });
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
+  //       .listen((List<Printer> event) {
+  //     log(event.map((e) => e.name).toList().toString());
+  //     setState(() {
+  //       printers = event;
+  //       printers.removeWhere((element) =>
+  //           element.name == null ||
+  //           element.name == '' ||
+  //           !element.name!.toLowerCase().contains('print'));
+  //     });
+  //   });
+  // }
+
+  stopScan() {
+    _devicesStreamSubscription?.cancel();
+    _flutterThermalPrinterPlugin.stopScan();
   }
 
   void getUsbDevices() async {
@@ -79,9 +87,16 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               onPressed: () {
                 // startScan();
-                getUsbDevices();
+                startScan();
               },
               child: const Text('Get Printers'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // startScan();
+                stopScan();
+              },
+              child: const Text('Stop Scan'),
             ),
             Expanded(
               child: ListView.builder(
@@ -99,20 +114,21 @@ class _MyAppState extends State<MyApp> {
                       }
                     },
                     title: Text(printers[index].name ?? 'No Name'),
-                    subtitle: Text(
-                        "VendorId: ${printers[index].address} - Connected: ${printers[index].isConnected}"),
+                    subtitle: Text("Connected: ${printers[index].isConnected}"),
                     trailing: IconButton(
                       icon: const Icon(Icons.connect_without_contact),
                       onPressed: () async {
                         final profile = await CapabilityProfile.load();
                         final generator = Generator(PaperSize.mm80, profile);
                         List<int> bytes = [];
-                        bytes += generator.text("Sunil Kumar",
-                            styles: const PosStyles(
-                              bold: true,
-                              height: PosTextSize.size3,
-                              width: PosTextSize.size3,
-                            ));
+                        bytes += generator.text(
+                          "Sunil Kumar",
+                          styles: const PosStyles(
+                            bold: true,
+                            height: PosTextSize.size3,
+                            width: PosTextSize.size3,
+                          ),
+                        );
                         bytes += generator.cut();
                         await _flutterThermalPrinterPlugin.printData(
                           printers[index],

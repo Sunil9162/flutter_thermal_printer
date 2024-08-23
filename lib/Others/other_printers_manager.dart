@@ -24,7 +24,6 @@ class OtherPrinterManager {
   Stream<List<Printer>> get devicesStream => _devicesstream.stream;
   StreamSubscription? subscription;
 
-  EventChannel? _eventChannel;
   static String channelName = 'flutter_thermal_printer/events';
 
   // Start scanning for BLE devices
@@ -70,10 +69,21 @@ class OtherPrinterManager {
   }
 
   // Stop scanning for BLE devices
-  Future<void> stopScan() async {
+  Future<void> stopScan({
+    bool stopBle = true,
+    bool stopUsb = true,
+  }) async {
     try {
-      await subscription?.cancel();
-      await FlutterBluePlus.stopScan();
+      if (stopBle) {
+        await subscription?.cancel();
+        await FlutterBluePlus.stopScan();
+      }
+      if (stopUsb) {
+        await _usbSubscription?.cancel();
+      }
+      if (refresher != null && stopBle && stopUsb) {
+        await refresher?.cancel();
+      }
     } catch (e) {
       log('Failed to stop scanning for devices $e');
     }
@@ -209,7 +219,6 @@ class OtherPrinterManager {
         for (var e in devices) {
           final map =
               Map<String, dynamic>.from(e is String ? jsonDecode(e) : e);
-          // log('Map: $map');
           final device = Printer(
             vendorId: map['vendorId']?.toString(),
             productId: map['productId']?.toString(),
@@ -231,6 +240,8 @@ class OtherPrinterManager {
     }
   }
 
+  StreamSubscription? refresher;
+
   // Get Printers from BT and USB
   void getPrinters({
     Duration refreshDuration = const Duration(seconds: 5),
@@ -239,10 +250,43 @@ class OtherPrinterManager {
       ConnectionType.USB,
     ],
   }) async {
+    if (connectionTypes.isEmpty) {
+      return;
+    }
+    if (refresher != null) {
+      refresher?.cancel();
+      refresher = null;
+    }
     List<Printer> btlist = [];
     if (connectionTypes.contains(ConnectionType.BLE)) {
-      subscription?.cancel();
+      if (subscription != null) {
+        subscription?.cancel();
+        subscription = null;
+      }
+      await FlutterBluePlus.stopScan();
       await FlutterBluePlus.startScan();
+      final systemDevices = (await FlutterBluePlus.systemDevices)
+          .map((e) => Printer(
+                address: e.remoteId.str,
+                name: e.platformName,
+                connectionType: ConnectionType.BLE,
+                isConnected: e.isConnected,
+              ))
+          .toList();
+      btlist.addAll(systemDevices);
+      if (Platform.isAndroid) {
+        // Bonded devices
+        final bondedDevices = (await FlutterBluePlus.bondedDevices)
+            .map((e) => Printer(
+                  address: e.remoteId.str,
+                  name: e.platformName,
+                  connectionType: ConnectionType.BLE,
+                  isConnected: e.isConnected,
+                ))
+            .toList();
+        btlist.addAll(bondedDevices);
+      }
+      log('Scanning for BLE devices');
       subscription = FlutterBluePlus.scanResults.listen((device) {
         final devices = device.map(
           (e) {
@@ -255,8 +299,17 @@ class OtherPrinterManager {
           },
         ).toList();
         devices.removeWhere(
-            (element) => element.name == null || element.name == '');
-        btlist = devices;
+          (element) => element.name == null || element.name == '',
+        );
+        //  If the device is already in the list, update it
+        for (var e in devices) {
+          final index = btlist.indexWhere((i) => i.address == e.address);
+          if (index < 0) {
+            btlist.add(e);
+          } else {
+            btlist[index] = e;
+          }
+        }
       });
     }
     List<Printer> list = [];
@@ -271,11 +324,11 @@ class OtherPrinterManager {
           final map =
               Map<String, dynamic>.from(e is String ? jsonDecode(e) : e);
           final device = Printer(
-            vendorId: map['vendorId'],
-            productId: map['productId'],
+            vendorId: map['vendorId'].toString(),
+            productId: map['productId'].toString(),
             name: map['name'],
             connectionType: ConnectionType.USB,
-            address: map['vendorId'],
+            address: map['vendorId'].toString(),
             isConnected: false,
           );
           final isConnected =
@@ -286,7 +339,7 @@ class OtherPrinterManager {
         list = templist;
       });
     }
-    Stream.periodic(refreshDuration, (x) => x).listen((event) {
+    refresher = Stream.periodic(refreshDuration, (x) => x).listen((event) {
       _devicesstream.add(list + btlist);
     });
   }

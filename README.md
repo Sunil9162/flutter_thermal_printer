@@ -1,4 +1,6 @@
 # flutter_thermal_printer
+[![Visits Badge](https://badges.pufler.dev/visits/Sunil9162/flutter_thermal_printer)]([https://badges.pufler.dev](https://badges.pufler.dev/visits/Sunil9162/flutter_thermal_printer))
+[![Updated Badge](https://badges.pufler.dev/updated/Sunil9162/flutter_thermal_printer)](https://badges.pufler.dev)
 
 Package for all services for thermal printer in android, ios, macos, windows.
 
@@ -124,3 +126,10 @@ Printers of Widows will only work if you have the POS-X driver installed on Wind
 Download Driver from Here:
 
 https://pos-x.com/download/thermal-receipt-printer-driver-2/
+
+
+
+
+## Contributers
+
+![Contributors Display](https://badges.pufler.dev/contributors/Sunil9162/flutter_thermal_printer?size=50&padding=5&perRow=10&bots=true)

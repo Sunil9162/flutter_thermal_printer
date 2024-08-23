@@ -1,3 +1,15 @@
+## 0.0.14
+* Added new extension for Printer of connectionsState
+* Now you can get system connected devices on macos
+
+## 0.0.14
+* Fixed flickering of bt devices
+* Added some improvements
+
+## 0.0.13
+* Removed unused library flutterlib_serialport
+* Updated some dependencies
+
 ## 0.0.12
 * Some Bugs Fixed in MacOs
 
