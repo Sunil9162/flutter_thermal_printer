@@ -1,7 +1,4 @@
 PODS:
-  - bluetooth_low_energy_darwin (0.0.1):
-    - Flutter
-    - FlutterMacOS
   - flutter_blue_plus (0.0.1):
     - FlutterMacOS
   - flutter_thermal_printer (0.0.1):
@@ -12,15 +9,12 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
-  - bluetooth_low_energy_darwin (from `Flutter/ephemeral/.symlinks/plugins/bluetooth_low_energy_darwin/darwin`)
   - flutter_blue_plus (from `Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos`)
   - flutter_thermal_printer (from `Flutter/ephemeral/.symlinks/plugins/flutter_thermal_printer/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
 
 EXTERNAL SOURCES:
-  bluetooth_low_energy_darwin:
-    :path: Flutter/ephemeral/.symlinks/plugins/bluetooth_low_energy_darwin/darwin
   flutter_blue_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos
   flutter_thermal_printer:
@@ -31,11 +25,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
 
 SPEC CHECKSUMS:
-  bluetooth_low_energy_darwin: 764d8d1ae5abefbcdb839e812b4b25c0061fcf8b
   flutter_blue_plus: e2868679021f19d12a8c0c58a33f1df66ec7fa6a
   flutter_thermal_printer: 89ad742652b32933223d893678c14cbd59579ed0
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
 
 PODFILE CHECKSUM: ebbac5529cc316622dbd5af479f7b39cdd10c82d
 

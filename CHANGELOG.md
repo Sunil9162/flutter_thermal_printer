@@ -1,4 +1,10 @@
-## 0.0.14
+## 0.0.17
+* Fixed get system devices in ble
+
+## 0.0.16
+* Bumped packages dependent on like flutter_blue_plus,win32,flutter_utils_plus
+
+## 0.0.15
 * Added new extension for Printer of connectionsState
 * Now you can get system connected devices on macos
 

@@ -3,7 +3,9 @@ import FlutterMacOS
 import IOUSBHost
 import IOKit
 import IOKit.usb
+import IOKit.usb.IOUSBLib
 import Foundation
+import CoreFoundation
 
 public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin  , FlutterStreamHandler{
     
@@ -101,14 +103,20 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin  , FlutterStre
         var iterator: io_iterator_t = 0
 
         // Create the matching dictionary
-        guard let matchingDict = IOServiceMatching(kIOUSBDeviceClassName) as? NSMutableDictionary else {
+        guard let matchingDict = IOServiceMatching(kIOUSBDeviceClassName) else {
             print("Error creating matching dictionary")
             return nil
         }
-        
+
         // Set vendorId and productId in the matching dictionary
-        matchingDict[kUSBVendorID as String] = NSNumber(value: vendorId)
-        matchingDict[kUSBProductID as String] = NSNumber(value: productId)
+        let vendorIdNumber = NSNumber(value: vendorId)
+        let productIdNumber = NSNumber(value: productId)
+
+        // Set the Vendor ID in the dictionary
+        CFDictionarySetValue(matchingDict, Unmanaged.passUnretained(kUSBVendorID as CFString).toOpaque(), Unmanaged.passUnretained(vendorIdNumber).toOpaque())
+
+        // Set the Product ID in the dictionary
+        CFDictionarySetValue(matchingDict, Unmanaged.passUnretained(kUSBProductID as CFString).toOpaque(), Unmanaged.passUnretained(productIdNumber).toOpaque())
 
         // Get the matching services
         let result = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict, &iterator)
@@ -125,123 +133,196 @@ public class FlutterThermalPrinterPlugin: NSObject, FlutterPlugin  , FlutterStre
     }
 
     func sendBytesToPrinter(vendorId: Int, productId: Int, data: Data) {
-        guard let device = findPrinter(vendorId: vendorId, productId: productId) else {
-            print("Printer not found")
-            return
-        }
-        
-        var plugInInterfacePtrPtr: UnsafeMutablePointer<UnsafeMutablePointer<IOCFPlugInInterface>?>? = UnsafeMutablePointer.allocate(capacity: 1)
-        var score: Int32 = 0
-
-        let result = IOCreatePlugInInterfaceForService(device,
-                                                       kIOUSBDeviceUserClientTypeID,
-                                                       kIOCFPlugInInterfaceID,
-                                                       &plugInInterfacePtrPtr,
-                                                       &score)
-        
-        if result != KERN_SUCCESS {
-            print("Unable to create plugin interface: \(result)")
-            plugInInterfacePtrPtr?.deallocate()
-            return
-        }else{
-            print("Created interface: \(result)")
-        }
-//
-//        // Safely unwrap the optional plug-in interface
-//        guard let plugInInterface = plugInInterfacePtrPtr?.pointee?.pointee else {
-//            print("Plugin interface is nil")
-//            plugInInterfacePtrPtr?.deallocate()
-//            return
-//        }
-//
-//        var usbDeviceInterfacePtr: UnsafeMutablePointer<IOUSBDeviceInterface>? = nil
-//        let iid = kIOUSBDeviceInterfaceID
+//        // Create the matching dictionary
+//        var matchingDict: CFMutableDictionary?
+//        let dict = IOServiceMatching(kIOUserServicePropertiesKey as String)
 //        
-//        let result2 = withUnsafeMutablePointer(to: &usbDeviceInterfacePtr) {
-//            $0.withMemoryRebound(to: UnsafeMutableRawPointer.self, capacity: 1) {
-//                plugInInterface.QueryInterface($0,
-//                                               CFUUIDGetUUIDBytes(iid),
-//                                               $0)
-//            }
-//        }
-//        
-//        if result2 != KERN_SUCCESS {
-//            print("Unable to query plugin interface: \(result2.debugDescription)")
-//            plugInInterfacePtrPtr?.deallocate()
+//        // Ensure the matching dictionary is not nil
+//        guard let dictUnwrapped = dict else {
+//            print("Unable to create matching dictionary.")
 //            return
 //        }
 //        
-//        guard let usbDeviceInterface = usbDeviceInterfacePtr else {
-//            print("No USB device interface found")
-//            plugInInterfacePtrPtr?.deallocate()
-//            return
-//        }
+//        matchingDict = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 0, dictUnwrapped)
+//        
+//        // Set the vendor and product IDs
+//        let vendorIdNumber = NSNumber(value: vendorId)
+//        let productIdNumber = NSNumber(value: productId)
+//        
+//        // Set the Vendor ID in the dictionary
+//        CFDictionarySetValue(matchingDict, Unmanaged.passUnretained(kUSBVendorID as CFString).toOpaque(), Unmanaged.passUnretained(vendorIdNumber).toOpaque())
 //
-//        // Open the device
-//        let kr = usbDeviceInterface.pointee.USBDeviceOpen(usbDeviceInterface)
-//        if kr != KERN_SUCCESS {
-//            print("Unable to open USB device: \(kr.debugDescription)")
-//            usbDeviceInterface.pointee.USBDeviceClose(usbDeviceInterface)
-//            plugInInterfacePtrPtr?.deallocate()
-//            return
-//        }
+//        // Set the Product ID in the dictionary
+//        CFDictionarySetValue(matchingDict, Unmanaged.passUnretained(kUSBProductID as CFString).toOpaque(), Unmanaged.passUnretained(productIdNumber).toOpaque())
+//        
 //
-//        // Find the bulk output endpoint
-//        var interfaceIterator: io_iterator_t = 0
-//        let interfaceMatchingDict = IOServiceMatching(kIOUSBInterfaceClassName)
-//        IOServiceGetMatchingServices(kIOMasterPortDefault, interfaceMatchingDict, &interfaceIterator)
+//        var iterator: io_iterator_t = 0
+//            let result = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict!, &iterator)
 //
-//        var foundInterface: io_service_t = 0
-//        while (foundInterface = IOIteratorNext(interfaceIterator)) != 0 {
-//            var usbInterfaceInterfacePtrPtr: UnsafeMutablePointer<UnsafeMutablePointer<IOUSBInterfaceInterface>?>? = UnsafeMutablePointer.allocate(capacity: 1)
-//            var localPlugInInterfacePtrPtr: UnsafeMutablePointer<UnsafeMutablePointer<IOCFPlugInInterface>?>? = UnsafeMutablePointer.allocate(capacity: 1)
-//            IOCreatePlugInInterfaceForService(foundInterface,
-//                                              kIOUSBInterfaceUserClientTypeID,
-//                                              kIOCFPlugInInterfaceID,
-//                                              &localPlugInInterfacePtrPtr,
-//                                              &score)
-//            
-//            let plugInInterface = localPlugInInterfacePtrPtr?.pointee?.pointee
-//            plugInInterface?.QueryInterface(localPlugInInterfacePtrPtr,
-//                                            CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID),
-//                                            &usbInterfaceInterfacePtrPtr)
-//            
-//            let usbInterfaceInterface = usbInterfaceInterfacePtrPtr?.pointee?.pointee
-//            
-//            // Open the interface
-//            let kr = usbInterfaceInterface?.USBInterfaceOpen(usbInterfaceInterfacePtrPtr)
-//            if kr == KERN_SUCCESS {
-//                // Find the bulk output endpoint
-//                var pipeRef: UInt8 = 0
-//                var endpointDescriptor = IOUSBEndpointDescriptor()
-//                
-//                let result = usbInterfaceInterface?.GetPipeProperties(usbInterfaceInterfacePtrPtr, 1, &pipeRef, nil, nil, nil, &endpointDescriptor)
-//                
-//                if result == KERN_SUCCESS && (endpointDescriptor.bEndpointAddress & 0x80) == 0 { // Check if it's an output endpoint
-//                    var bytesWritten = UInt32(data.count)
-//                    let dataPtr = (data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count)
-//                    let writeResult = usbInterfaceInterface?.WritePipe(usbInterfaceInterfacePtrPtr, pipeRef, UnsafeMutablePointer(mutating: dataPtr), bytesWritten, 0)
-//                    if writeResult == KERN_SUCCESS {
-//                        print("Successfully sent data to printer")
+//        if result == KERN_SUCCESS {
+//                var service: io_object_t = 0
+//                while service != 0 {
+//                    service = IOIteratorNext(iterator)
+//                    
+//                    var usbDevice: io_object_t = service
+//                    var usbInterface: io_object_t = 0
+//                    // Open the USB device interface
+//                    let openResult = IOUSBDeviceInterfaceOpen(usbDevice, &usbInterface)
+//                    
+//                    if openResult == KERN_SUCCESS {
+//                        // Send data to the printer
+//                        let bytesWritten = IOUSBDeviceWrite(usbInterface, 0, data.count, data.bytes.bindMemory(to: UInt8.self, capacity: data.count))
+//                        
+//                        if bytesWritten < 0 {
+//                            print("Error writing to USB printer: \(bytesWritten)")
+//                        }
+//                        
+//                        // Close the USB device interface
+//                        IOUSBDeviceClose(usbInterface)
 //                    } else {
-//                        print("Failed to send data to printer: \(writeResult.debugDescription)")
+//                        print("Error opening USB device")
 //                    }
-//                    usbInterfaceInterface?.USBInterfaceClose(usbInterfaceInterfacePtrPtr)
-//                    break
+//                    
+//                    // Release the USB device
+//                    IOObjectRelease(usbDevice)
 //                }
-//                usbInterfaceInterface?.USBInterfaceClose(usbInterfaceInterfacePtrPtr)
+//                
+//                // Release the iterator
+//                IOObjectRelease(iterator)
+//            } else {
+//                print("No USB printer found with the specified vendor and product ID.")
 //            }
-//            IOObjectRelease(foundInterface)
-//            usbInterfaceInterfacePtrPtr?.deallocate()
-//            localPlugInInterfacePtrPtr?.deallocate()
-//        }
-//        IOObjectRelease(interfaceIterator)
-//        usbDeviceInterface.pointee.USBDeviceClose(usbDeviceInterface)
+        let matchingDict = IOServiceMatching(kIOUSBDeviceClassName)
+            var iterator: io_iterator_t = 0
+            let kr = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict, &iterator)
 
-        // Clean up
-        plugInInterfacePtrPtr?.deallocate()
+            if kr == KERN_SUCCESS {
+                var service: io_object_t = IOIteratorNext(iterator)
+                while service != 0 {
+                    var vendorIdNumber: NSNumber?
+                    var productIdNumber: NSNumber?
+
+                    var properties: Unmanaged<CFMutableDictionary>?
+                    let result = IORegistryEntryCreateCFProperties(service, &properties, kCFAllocatorDefault, 0)
+
+                    if result == KERN_SUCCESS, let cfProperties = properties?.takeRetainedValue() as? [String: Any] {
+                        vendorIdNumber = cfProperties[kUSBVendorID as String] as? NSNumber
+                        productIdNumber = cfProperties[kUSBProductID as String] as? NSNumber
+                    }
+
+                    if let vendor = vendorIdNumber, let product = productIdNumber,
+                       vendor.intValue == vendorId, product.intValue == productId {
+                        print("USB printer found with Vendor ID: \(vendorId), Product ID: \(productId)")
+                        
+                        // Write data to USB printer
+                        writeToUSBPrinter(service, data: data)
+                    }
+
+                    // Release the current service and move to the next one
+                    IOObjectRelease(service)
+                    service = IOIteratorNext(iterator)
+                }
+                
+                // Release the iterator when done
+                IOObjectRelease(iterator)
+            } else {
+                print("No USB printer found with the specified vendor and product ID.")
+            }
     }
-     
+    
+    func openUSBDevice(service: io_service_t) -> io_connect_t? {
+        var usbDeviceConnection: io_connect_t = 0
+        let kr = IOServiceOpen(service, mach_task_self_, 0, &usbDeviceConnection)
+
+        if kr != KERN_SUCCESS {
+            print("Unable to open USB device: \(kr)")
+            return nil
+        }
+
+        return usbDeviceConnection
+    }
+
+    func closeUSBDevice(deviceConnection: io_connect_t) {
+        IOServiceClose(deviceConnection)
+    }
+
+    func writeDataToUSBInterface(interface: UnsafeMutablePointer<IOUSBInterfaceInterface>, data: Data) -> kern_return_t {
+        var pipeRef: UInt8 = 1 // Assume pipe 1 is for bulk transfer; this may differ for your device
+        var kr: kern_return_t = KERN_SUCCESS
+
+        // Use `withUnsafeBytes` to work with the raw data buffer
+        data.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) in
+            let ptr = buffer.baseAddress!.assumingMemoryBound(to: UInt8.self) // Get a typed pointer to UInt8
+            let numBytesToSend = UInt32(buffer.count)
+            
+            // Cast to `UnsafeMutableRawPointer?` as required by `WritePipe`
+            kr = interface.pointee.WritePipe(interface, pipeRef, UnsafeMutableRawPointer(mutating: ptr), numBytesToSend)
+            
+            if kr != KERN_SUCCESS {
+                print("Error writing to USB interface: \(kr)")
+            } else {
+                print("Successfully wrote \(numBytesToSend) bytes to USB device.")
+            }
+        }
+
+        return kr
+    }
+
+    func writeToUSBPrinter(_ service: io_service_t, data: Data) {
+        guard let usbDevice = openUSBDevice(service: service) else {
+            print("Error opening USB device")
+            return
+        }
+
+        // Find the interface
+//        var iterator: io_iterator_t = 0
+//        let kr = IOUsbDeviceMatching(usbDevice, &iterator)
+//        
+//        if kr != KERN_SUCCESS {
+//            print("Error finding USB interfaces: \(kr)")
+//            closeUSBDevice(deviceConnection: usbDevice)
+//            return
+//        }
+//
+//        var interface: io_service_t
+//        while (interface = IOIteratorNext(iterator)) != 0 {
+//            var pluginInterface: UnsafeMutablePointer<IOCFPlugInInterface>? = nil
+//            var interfacePtr: UnsafeMutablePointer<UnsafeMutablePointer<IOUSBInterfaceInterface>?>? = nil
+//            let result = IOCreatePlugInInterfaceForService(interface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &pluginInterface, nil)
+//
+//            if result == KERN_SUCCESS, let plugin = pluginInterface {
+//                let queryResult = plugin.pointee.pointee.QueryInterface(plugin, CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID), UnsafeMutablePointer(&interfacePtr))
+//                
+//                if queryResult == KERN_SUCCESS, let usbInterface = interfacePtr?.pointee {
+//                    let openResult = usbInterface.pointee.Open(usbInterface)
+//
+//                    if openResult == KERN_SUCCESS {
+//                        print("Opened USB interface successfully")
+//                        
+//                        // Write data to USB
+//                        let writeResult = writeDataToUSBInterface(interface: usbInterface.pointee, data: data)
+//                        
+//                        if writeResult != KERN_SUCCESS {
+//                            print("Error writing data to USB device")
+//                        }
+//                        
+//                        // Close the interface
+//                        usbInterface.pointee.Close(usbInterface)
+//                    } else {
+//                        print("Failed to open USB interface")
+//                    }
+//                }
+//            }
+//
+//            // Release resources
+//            IOObjectRelease(interface)
+//        }
+//
+//        // Release the iterator and close the USB device connection
+//        IOObjectRelease(iterator)
+//        closeUSBDevice(deviceConnection: usbDevice)
+    }
+
     
     public func printData(vendorID: String, productID: String, data: Array<Int>, path: String){
         let dataArray = data.map { $0.byteSwapped }
