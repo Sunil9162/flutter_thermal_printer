@@ -1,3 +1,6 @@
+## 0.0.18+1
+* Update some bugs
+
 ## 0.0.18
 * Added `turnOnBluetooth` function
 * Added `isBleTurnedOnStream` Stream of bluetooth is turned on or off

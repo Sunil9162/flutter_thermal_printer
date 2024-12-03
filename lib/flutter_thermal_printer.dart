@@ -104,6 +104,7 @@ class FlutterThermalPrinter {
       ConnectionType.USB,
       ConnectionType.BLE
     ],
+    bool androidUsesFineLocation = false,
   }) async {
     if (Platform.isWindows) {
       WindowPrinterManager.instance.getPrinters(
@@ -113,6 +114,7 @@ class FlutterThermalPrinter {
     } else {
       OtherPrinterManager.instance.getPrinters(
         connectionTypes: connectionTypes,
+        androidUsesFineLocation: androidUsesFineLocation,
       );
     }
   }
