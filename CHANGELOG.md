@@ -1,3 +1,11 @@
+## 0.0.18
+* Added `turnOnBluetooth` function
+* Added `isBleTurnedOnStream` Stream of bluetooth is turned on or off
+* Added `isBleTurnedOn` function
+* Added `printWidget` function for printing any flutter widget
+* Updated USB Connection for Android
+* Updated BLE for All Platforms
+
 ## 0.0.17
 * Fixed get system devices in ble
 

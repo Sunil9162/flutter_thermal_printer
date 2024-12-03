@@ -26,7 +26,6 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer");
     eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_thermal_printer/events");
     channel.setMethodCallHandler(this);
@@ -37,35 +36,44 @@ public class FlutterThermalPrinterPlugin implements FlutterPlugin, MethodCallHan
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
-    }else if (call.method.equals("getUsbDevicesList")){
-        result.success(usbPrinter.getUsbDevicesList());
-    }else if (call.method.equals("connect")){
-      String vendorId = call.argument("vendorId");
-      String productId = call.argument("productId");
-      result.success(usbPrinter.connect(vendorId, productId));
-    } else if (call.method.equals("disconnect")){
-      String vendorId = call.argument("vendorId");
-      String productId = call.argument("productId");
-      result.success(usbPrinter.disconnect(vendorId, productId));
-    } 
-    else if (call.method.equals("printText")){
-      String vendorId = call.argument("vendorId");
-      String productId = call.argument("productId");
-      List<Integer> data = call.argument("data");
-      usbPrinter.printText(vendorId,productId,data);
-      result.success(true);
-    } else if (call.method.equals("isConnected")) {
-        String vendorId = call.argument("vendorId");
-        String productId = call.argument("productId");
-        result.success(usbPrinter.isConnected(vendorId, productId));
-    } else if (call.method.equals("convertimage")) {
-         List<Integer> path = call.argument("path");
-        result.success(usbPrinter.convertimage(path));
-    } else {
-      result.notImplemented();
-    }
+      switch (call.method) {
+          case "getPlatformVersion":
+              result.success("Android " + android.os.Build.VERSION.RELEASE);
+              break;
+          case "getUsbDevicesList":
+              result.success(usbPrinter.getUsbDevicesList());
+              break;
+          case "connect": {
+              String vendorId = call.argument("vendorId");
+              String productId = call.argument("productId");
+              usbPrinter.connect(vendorId, productId);
+              result.success(false  );
+              break;
+          }
+          case "disconnect": {
+              String vendorId = call.argument("vendorId");
+              String productId = call.argument("productId");
+              result.success(usbPrinter.disconnect(vendorId, productId));
+              break;
+          }
+          case "printText": {
+              String vendorId = call.argument("vendorId");
+              String productId = call.argument("productId");
+              List<Integer> data = call.argument("data");
+              usbPrinter.printText(vendorId, productId, data);
+              result.success(true);
+              break;
+          }
+          case "isConnected": {
+              String vendorId = call.argument("vendorId");
+              String productId = call.argument("productId");
+              result.success(usbPrinter.isConnected(vendorId, productId));
+              break;
+          }
+          default:
+              result.notImplemented();
+              break;
+      }
   }
 
   @Override

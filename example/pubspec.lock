@@ -114,10 +114,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_blue_plus
-      sha256: "55d37e9339765fef9439f3759a2bddaf9c8db1f90d46ba5a5d834fb28e0ab809"
+      sha256: d2ac9fac56c4b3b08eb68752380e2d45e64c61db629b70e61bb36c95cb65d431
       url: "https://pub.dev"
     source: hosted
-    version: "1.32.12"
+    version: "1.34.5"
   flutter_driver:
     dependency: transitive
     description: flutter
@@ -142,7 +142,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.16"
+    version: "0.0.17"
   fuchsia_remote_debug_protocol:
     dependency: transitive
     description: flutter
@@ -160,10 +160,10 @@ packages:
     dependency: transitive
     description:
       name: image
-      sha256: "2237616a36c0d69aef7549ab439b833fb7f9fb9fc861af2cc9ac3eedddd69ca8"
+      sha256: f31d52537dc417fdcde36088fdf11d191026fd5e4fae742491ebd40e5a8bea7d
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.0"
+    version: "4.3.0"
   integration_test:
     dependency: "direct dev"
     description: flutter
@@ -313,6 +313,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.2"
+  screenshot:
+    dependency: transitive
+    description:
+      name: screenshot
+      sha256: "63817697a7835e6ce82add4228e15d233b74d42975c143ad8cfe07009fab866b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -410,10 +418,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "68d1e89a91ed61ad9c370f9f8b6effed9ae5e0ede22a270bdfa6daf79fc2290a"
+      sha256: "8b338d4486ab3fbc0ba0db9f9b4f5239b6697fcee427939a40e720cbb9ee0a69"
       url: "https://pub.dev"
     source: hosted
-    version: "5.5.4"
+    version: "5.9.0"
   win_ble:
     dependency: transitive
     description:
@@ -439,5 +447,5 @@ packages:
     source: hosted
     version: "6.5.0"
 sdks:
-  dart: ">=3.4.0 <4.0.0"
+  dart: ">=3.5.0 <4.0.0"
   flutter: ">=3.22.0"

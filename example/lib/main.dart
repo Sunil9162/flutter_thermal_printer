@@ -31,6 +31,7 @@ class _MyAppState extends State<MyApp> {
     _devicesStreamSubscription?.cancel();
     await _flutterThermalPrinterPlugin.getPrinters(connectionTypes: [
       ConnectionType.USB,
+      ConnectionType.BLE,
     ]);
     _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
         .listen((List<Printer> event) {
@@ -46,29 +47,16 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
-  //       .listen((List<Printer> event) {
-  //     log(event.map((e) => e.name).toList().toString());
-  //     setState(() {
-  //       printers = event;
-  //       printers.removeWhere((element) =>
-  //           element.name == null ||
-  //           element.name == '' ||
-  //           !element.name!.toLowerCase().contains('print'));
-  //     });
-  //   });
-  // }
-
-  stopScan() {
-    _devicesStreamSubscription?.cancel();
-    _flutterThermalPrinterPlugin.stopScan();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      startScan();
+    });
   }
 
-  void getUsbDevices() async {
-    await _flutterThermalPrinterPlugin.getUsbDevices();
+  stopScan() {
+    _flutterThermalPrinterPlugin.stopScan();
   }
 
   @override
@@ -108,9 +96,8 @@ class _MyAppState extends State<MyApp> {
                         await _flutterThermalPrinterPlugin
                             .disconnect(printers[index]);
                       } else {
-                        final isConnected = await _flutterThermalPrinterPlugin
+                        await _flutterThermalPrinterPlugin
                             .connect(printers[index]);
-                        log("Devices: $isConnected");
                       }
                     },
                     title: Text(printers[index].name ?? 'No Name'),
@@ -149,41 +136,42 @@ class _MyAppState extends State<MyApp> {
 
   Widget receiptWidget() {
     return Container(
-        padding: const EdgeInsets.all(8),
-        color: Colors.white,
-        width: 300,
-        height: 300,
-        child: const Center(
-          child: Column(
-            children: [
-              Text(
-                "FLUTTER THERMAL PRINTER",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+      padding: const EdgeInsets.all(8),
+      color: Colors.white,
+      width: 300,
+      height: 300,
+      child: const Center(
+        child: Column(
+          children: [
+            Text(
+              "FLUTTER THERMAL PRINTER",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-              SizedBox(height: 10),
-              Text(
-                "Hello World",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "Hello World",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-              SizedBox(height: 10),
-              Text(
-                "This is a test receipt",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "This is a test receipt",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-            ],
-          ),
-        ));
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

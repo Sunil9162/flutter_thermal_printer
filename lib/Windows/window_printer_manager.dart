@@ -183,4 +183,24 @@ class WindowPrinterManager {
       _devicesstream.add(list + btlist);
     });
   }
+
+  turnOnBluetooth() async {
+    if (!isInitialized) {
+      throw Exception('WindowBluetoothManager is not initialized');
+    }
+    await WinBle.updateBluetoothState(true);
+  }
+
+  Stream<bool> isBleTurnedOnStream = WinBle.bleState.map(
+    (event) {
+      return event == BleState.On;
+    },
+  );
+
+  Future<bool> isBleTurnedOn() async {
+    if (!isInitialized) {
+      throw Exception('WindowBluetoothManager is not initialized');
+    }
+    return (await WinBle.getBluetoothState()) == BleState.On;
+  }
 }
