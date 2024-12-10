@@ -254,132 +254,155 @@ class OtherPrinterManager {
     if (connectionTypes.isEmpty) {
       throw Exception('No connection type provided');
     }
+
+    if (connectionTypes.contains(ConnectionType.USB)) {
+      await _getUSBPrinters();
+    }
+
+    if (connectionTypes.contains(ConnectionType.BLE)) {
+      await _getBLEPrinters(androidUsesFineLocation);
+    }
+  }
+
+  Future<void> _getUSBPrinters() async {
     try {
-      if (connectionTypes.contains(ConnectionType.USB)) {
-        final devices =
-            await FlutterThermalPrinterPlatform.instance.startUsbScan();
-        List<Printer> templist = [];
-        for (var e in devices) {
-          final map =
-              Map<String, dynamic>.from(e is String ? jsonDecode(e) : e);
-          final device = Printer(
-            vendorId: map['vendorId'].toString(),
-            productId: map['productId'].toString(),
-            name: map['name'],
-            connectionType: ConnectionType.USB,
-            address: map['vendorId'].toString(),
-            isConnected: map['connected'] ?? false,
-          );
-          final isConnected =
-              await FlutterThermalPrinterPlatform.instance.isConnected(device);
-          device.isConnected = isConnected;
-          templist.add(device);
-        }
-        _devices.addAll(templist);
-        _usbSubscription?.cancel();
-        _usbSubscription = eventChannel.receiveBroadcastStream().listen(
-          (event) {
-            final map = Map<String, dynamic>.from(event);
-            final device = Printer(
-              vendorId: map['vendorId'].toString(),
-              productId: map['productId'].toString(),
-              name: map['name'],
-              connectionType: ConnectionType.USB,
-              address: map['vendorId'].toString(),
-              isConnected: map['connected'] ?? false,
-            );
-            final index =
-                _devices.indexWhere((i) => i.address == device.address);
-            if (index == -1) {
-              _devices.add(device);
-            } else {
-              _devices[index] = device;
-            }
-            sortDevices();
-          },
+      final devices =
+          await FlutterThermalPrinterPlatform.instance.startUsbScan();
+
+      final usbPrinters =
+          await Future.wait(devices.map<Printer>((device) async {
+        final map = Map<String, dynamic>.from(
+            device is String ? jsonDecode(device) : device);
+        final printer = Printer(
+          vendorId: map['vendorId'].toString(),
+          productId: map['productId'].toString(),
+          name: map['name'],
+          connectionType: ConnectionType.USB,
+          address: map['vendorId'].toString(),
+          isConnected: map['connected'] ?? false,
         );
-        sortDevices();
-      }
+        printer.isConnected =
+            await FlutterThermalPrinterPlatform.instance.isConnected(printer);
+        return printer;
+      }).toList());
+
+      _devices.addAll(usbPrinters.cast<Printer>());
+      _usbSubscription?.cancel();
+      _usbSubscription = eventChannel.receiveBroadcastStream().listen((event) {
+        final map = Map<String, dynamic>.from(event);
+        _updateOrAddPrinter(Printer(
+          vendorId: map['vendorId'].toString(),
+          productId: map['productId'].toString(),
+          name: map['name'],
+          connectionType: ConnectionType.USB,
+          address: map['vendorId'].toString(),
+          isConnected: map['connected'] ?? false,
+        ));
+      });
+
+      sortDevices();
     } catch (e) {
       log("$e [USB Connection]");
     }
+  }
+
+  Future<void> _getBLEPrinters(bool androidUsesFineLocation) async {
     try {
-      if (connectionTypes.contains(ConnectionType.BLE)) {
-        if (subscription != null) {
-          subscription?.cancel();
-          subscription = null;
-        }
-        if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
-          await FlutterBluePlus.turnOn();
-        }
-        await FlutterBluePlus.stopScan();
-        await FlutterBluePlus.startScan(
-          androidUsesFineLocation: androidUsesFineLocation,
-        );
-        final systemDevices = (await FlutterBluePlus.systemDevices([]))
-            .map(
-              (e) => Printer(
-                address: e.remoteId.str,
-                name: e.platformName,
-                connectionType: ConnectionType.BLE,
-                isConnected: e.isConnected,
-              ),
-            )
-            .toList();
-        _devices.addAll(systemDevices);
-        if (Platform.isAndroid) {
-          // Bonded devices
-          final bondedDevices = (await FlutterBluePlus.bondedDevices)
-              .map((e) => Printer(
-                    address: e.remoteId.str,
-                    name: e.platformName,
-                    connectionType: ConnectionType.BLE,
-                    isConnected: e.isConnected,
-                  ))
-              .toList();
-          _devices.addAll(bondedDevices);
-        }
-        sortDevices();
-        subscription = FlutterBluePlus.scanResults.listen((device) {
-          final devices = device.map(
-            (e) {
+      subscription?.cancel();
+      subscription = null;
+
+      if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
+        await FlutterBluePlus.turnOn();
+      }
+
+      await FlutterBluePlus.stopScan();
+      await FlutterBluePlus.startScan(
+        androidUsesFineLocation: androidUsesFineLocation,
+      );
+
+      // Get system devices
+      final systemDevices = await _getBLESystemDevices();
+      _devices.addAll(systemDevices);
+
+      // Get bonded devices (Android only)
+      if (Platform.isAndroid) {
+        final bondedDevices = await _getBLEBondedDevices();
+        _devices.addAll(bondedDevices);
+      }
+
+      sortDevices();
+
+      // Listen to scan results
+      subscription = FlutterBluePlus.scanResults.listen((result) {
+        final devices = result
+            .map((e) {
               return Printer(
                 address: e.device.remoteId.str,
                 name: e.device.platformName,
                 connectionType: ConnectionType.BLE,
                 isConnected: e.device.isConnected,
               );
-            },
-          ).toList();
-          devices.removeWhere(
-            (element) => element.name == null || element.name == '',
-          );
-          //  If the device is already in the list, update it
-          for (var e in devices) {
-            final index = _devices.indexWhere((i) => i.address == e.address);
-            if (index < 0) {
-              _devices.add(e);
-            } else {
-              _devices[index] = e;
-            }
-            sortDevices();
-          }
-        });
-      }
+            })
+            .where((device) => device.name?.isNotEmpty ?? false)
+            .toList();
+
+        for (var device in devices) {
+          _updateOrAddPrinter(device);
+        }
+      });
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<List<Printer>> _getBLESystemDevices() async {
+    return (await FlutterBluePlus.systemDevices([]))
+        .map((device) => Printer(
+              address: device.remoteId.str,
+              name: device.platformName,
+              connectionType: ConnectionType.BLE,
+              isConnected: device.isConnected,
+            ))
+        .toList();
+  }
+
+  Future<List<Printer>> _getBLEBondedDevices() async {
+    return (await FlutterBluePlus.bondedDevices)
+        .map((device) => Printer(
+              address: device.remoteId.str,
+              name: device.platformName,
+              connectionType: ConnectionType.BLE,
+              isConnected: device.isConnected,
+            ))
+        .toList();
+  }
+
+  void _updateOrAddPrinter(Printer printer) {
+    final index =
+        _devices.indexWhere((device) => device.address == printer.address);
+    if (index == -1) {
+      _devices.add(printer);
+    } else {
+      _devices[index] = printer;
+    }
+    sortDevices();
   }
 
   void sortDevices() {
     _devices
         .removeWhere((element) => element.name == null || element.name == '');
     // remove items having same vendorId
-    _devices.removeWhere((element) =>
-        _devices.indexWhere((i) => i.vendorId == element.vendorId) !=
-        _devices.lastIndexOf(element));
-    final list = _devices.toSet().toList();
-    _devicesstream.add(list);
+    Set<String> seen = {};
+    _devices.retainWhere((element) {
+      String uniqueKey = '${element.vendorId}_${element.address}';
+      if (seen.contains(uniqueKey)) {
+        return false; // Remove duplicate
+      } else {
+        seen.add(uniqueKey); // Mark as seen
+        return true; // Keep
+      }
+    });
+    _devicesstream.add(_devices);
   }
 
   Future<void> turnOnBluetooth() async {
