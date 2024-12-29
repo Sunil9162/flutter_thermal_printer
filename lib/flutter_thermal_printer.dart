@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -8,12 +8,11 @@ import 'package:flutter_thermal_printer/Windows/window_printer_manager.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 import 'package:image/image.dart' as img;
 import 'package:screenshot/screenshot.dart';
-
 import 'Others/other_printers_manager.dart';
 
+export 'package:flutter_thermal_printer/network/network_printer.dart';
 export 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-export 'package:flutter_blue_plus/flutter_blue_plus.dart'
-    show BluetoothDevice, BluetoothConnectionState;
+export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice, BluetoothConnectionState;
 
 class FlutterThermalPrinter {
   FlutterThermalPrinter._();
@@ -100,10 +99,7 @@ class FlutterThermalPrinter {
 
   Future<void> getPrinters({
     Duration refreshDuration = const Duration(seconds: 2),
-    List<ConnectionType> connectionTypes = const [
-      ConnectionType.USB,
-      ConnectionType.BLE
-    ],
+    List<ConnectionType> connectionTypes = const [ConnectionType.USB, ConnectionType.BLE],
     bool androidUsesFineLocation = false,
   }) async {
     if (Platform.isWindows) {
@@ -151,6 +147,45 @@ class FlutterThermalPrinter {
     } else {
       return FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on;
     }
+  }
+
+  Future<Uint8List> screenShotWidget(
+    BuildContext context, {
+    required Widget widget,
+    Duration delay = const Duration(milliseconds: 100),
+    PaperSize paperSize = PaperSize.mm80,
+    Generator? generator,
+  }) async {
+    final controller = ScreenshotController();
+    final image = await controller.captureFromLongWidget(widget, pixelRatio: View.of(context).devicePixelRatio, delay: delay);
+    Generator? generator0;
+    if (generator == null) {
+      final profile = await CapabilityProfile.load();
+      generator0 = Generator(paperSize, profile);
+    } else {
+      final profile = await CapabilityProfile.load();
+      generator0 = Generator(paperSize, profile);
+    }
+    final imagebytes = img.decodeImage(image);
+    final totalheight = imagebytes!.height;
+    final totalwidth = imagebytes.width;
+    final timestoCut = totalheight ~/ 30;
+    List<int> bytes = [];
+    for (var i = 0; i < timestoCut; i++) {
+      final croppedImage = img.copyCrop(
+        imagebytes,
+        x: 0,
+        y: i * 30,
+        width: totalwidth,
+        height: 30,
+      );
+      final raster = generator0.imageRaster(
+        croppedImage,
+        imageFn: PosImageFn.bitImageRaster,
+      );
+      bytes += raster;
+    }
+    return Uint8List.fromList(bytes);
   }
 
   Future<void> printWidget(
