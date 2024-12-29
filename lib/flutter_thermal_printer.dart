@@ -153,6 +153,7 @@ class FlutterThermalPrinter {
     BuildContext context, {
     required Widget widget,
     Duration delay = const Duration(milliseconds: 100),
+    int? customWidth,
     PaperSize paperSize = PaperSize.mm80,
     Generator? generator,
   }) async {
@@ -166,8 +167,17 @@ class FlutterThermalPrinter {
       final profile = await CapabilityProfile.load();
       generator0 = Generator(paperSize, profile);
     }
-    final imagebytes = img.decodeImage(image);
-    final totalheight = imagebytes!.height;
+    img.Image? imagebytes = img.decodeImage(image);
+
+    if (customWidth != null) {
+      final width = _makeDivisibleBy8(customWidth);
+      imagebytes = img.copyResize(imagebytes!, width: width);
+    }
+
+    imagebytes = _buildImageRasterAvaliable(imagebytes!);
+
+    imagebytes = img.grayscale(imagebytes);
+    final totalheight = imagebytes.height;
     final totalwidth = imagebytes.width;
     final timestoCut = totalheight ~/ 30;
     List<int> bytes = [];
@@ -186,6 +196,22 @@ class FlutterThermalPrinter {
       bytes += raster;
     }
     return Uint8List.fromList(bytes);
+  }
+
+  img.Image _buildImageRasterAvaliable(img.Image image) {
+    final avaliable = image.width % 8 == 0;
+    if (avaliable) {
+      return image;
+    }
+    final newWidth = _makeDivisibleBy8(image.width);
+    return img.copyResize(image, width: newWidth);
+  }
+
+  int _makeDivisibleBy8(int number) {
+    if (number % 8 == 0) {
+      return number;
+    }
+    return number + (8 - (number % 8));
   }
 
   Future<void> printWidget(
@@ -219,8 +245,9 @@ class FlutterThermalPrinter {
     } else {
       CapabilityProfile profile0 = profile ?? await CapabilityProfile.load();
       final ticket = Generator(paperSize, profile0);
-      final imagebytes = img.decodeImage(image!);
-      final totalheight = imagebytes!.height;
+      img.Image? imagebytes = img.decodeImage(image!);
+      imagebytes = _buildImageRasterAvaliable(imagebytes!);
+      final totalheight = imagebytes.height;
       final totalwidth = imagebytes.width;
       final timestoCut = totalheight ~/ 30;
       for (var i = 0; i < timestoCut; i++) {
