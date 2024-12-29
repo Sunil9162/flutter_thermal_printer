@@ -21,11 +21,8 @@ class Printer {
 
   Printer.fromJson(Map<String, dynamic> json) {
     address = json['address'];
-    name =
-        json['connectionType'] == 'BLE' ? json['platformName'] : json['name'];
-    connectionType = json['connectionType'] == 'BLE'
-        ? ConnectionType.BLE
-        : ConnectionType.USB;
+    name = json['connectionType'] == 'BLE' ? json['platformName'] : json['name'];
+    connectionType = _getConnectionTypeFromString(json['connectionType']);
     isConnected = json['isConnected'];
     vendorId = json['vendorId'];
     productId = json['productId'];
@@ -39,18 +36,31 @@ class Printer {
     } else {
       data['name'] = name;
     }
-    data['connectionType'] =
-        connectionType == ConnectionType.BLE ? 'BLE' : 'USB';
+    data['connectionType'] = connectionTypeString;
     data['isConnected'] = isConnected;
     data['vendorId'] = vendorId;
     data['productId'] = productId;
     return data;
+  }
+
+  ConnectionType _getConnectionTypeFromString(String? connectionType) {
+    switch (connectionType) {
+      case 'BLE':
+        return ConnectionType.BLE;
+      case 'USB':
+        return ConnectionType.USB;
+      case 'NETWORK':
+        return ConnectionType.NETWORK;
+      default:
+        throw ArgumentError('Invalid connection type');
+    }
   }
 }
 
 enum ConnectionType {
   BLE,
   USB,
+  NETWORK,
 }
 
 extension PrinterExtension on Printer {
@@ -60,6 +70,8 @@ extension PrinterExtension on Printer {
         return 'BLE';
       case ConnectionType.USB:
         return 'USB';
+      case ConnectionType.NETWORK:
+        return 'NETWORK';
       default:
         return '';
     }
