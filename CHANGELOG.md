@@ -1,3 +1,22 @@
+## 1.0.1
+* Updated ReadMe
+
+## 1.0.0
+* New Feature Network Printers added 
+* Thanks to `@eduardohr-muniz`
+
+## 0.0.20
+* Bugs fixed for usb printers
+
+## 0.0.19+2
+* Bugs fixed for usb printers
+
+## 0.0.19+1
+* Bugs Fixes
+
+## 0.0.19
+* Refracted code and fixed bugs
+
 ## 0.0.18+1
 * Update some bugs
 
