@@ -15,6 +15,7 @@ This plugin is used to print data on thermal printers with ease across multiple 
 | Bluetooth                      | ✅      | ✅  | ✅    | ✅      |
 | USB                            | ✅      |     | ✅    | ✅      |
 | BLE                            | ✅      | ✅  | ✅    | ✅      |
+| WiFi                           | ✅      | ✅  | ✅    | ✅      |
 
 ```dart
 final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
@@ -62,6 +63,17 @@ getPrinters(
 | Connect printer                | ✅      |     |       | ✅      |
 | Print data                     | ✅      |     |       | ✅      |
 | Print widget                   | ✅      |     |       | ✅      |
+
+---
+
+## WiFi Services
+
+| Feature                        | Android | iOS | macOS | Windows |
+| ------------------------------ | :-----: | :-: | :---: | :-----: |
+| Connect printer                | ✅      | ✅  | ✅    | ✅      |
+| Disconnect printer             | ✅      | ✅  | ✅    | ✅      |
+| Print data                     | ✅      | ✅  | ✅    | ✅      |
+| Print widget                   | ✅      | ✅  | ✅    | ✅      |
 
 ---
 

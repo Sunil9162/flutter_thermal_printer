@@ -18,8 +18,7 @@ class OtherPrinterManager {
     return _instance!;
   }
 
-  final StreamController<List<Printer>> _devicesstream =
-      StreamController<List<Printer>>.broadcast();
+  final StreamController<List<Printer>> _devicesstream = StreamController<List<Printer>>.broadcast();
 
   Stream<List<Printer>> get devicesStream => _devicesstream.stream;
   StreamSubscription? subscription;
@@ -156,10 +155,8 @@ class OtherPrinterManager {
           log('Device is not connected');
           return;
         }
-        final services = (await device.discoverServices()).skipWhile((value) =>
-            value.characteristics
-                .where((element) => element.properties.write)
-                .isEmpty);
+        final services =
+            (await device.discoverServices()).skipWhile((value) => value.characteristics.where((element) => element.properties.write).isEmpty);
         BluetoothCharacteristic? writecharacteristic;
         for (var service in services) {
           for (var characteristic in service.characteristics) {
@@ -184,11 +181,7 @@ class OtherPrinterManager {
             timestoPrint = numberOfTimesInt;
           }
           for (var i = 0; i < timestoPrint; i++) {
-            final data = bytes.sublist(
-                i * mtu,
-                ((i + 1) * mtu) > bytes.length
-                    ? bytes.length
-                    : ((i + 1) * mtu));
+            final data = bytes.sublist(i * mtu, ((i + 1) * mtu) > bytes.length ? bytes.length : ((i + 1) * mtu));
             await writecharacteristic.write(data);
           }
         } else {
@@ -266,13 +259,10 @@ class OtherPrinterManager {
 
   Future<void> _getUSBPrinters() async {
     try {
-      final devices =
-          await FlutterThermalPrinterPlatform.instance.startUsbScan();
+      final devices = await FlutterThermalPrinterPlatform.instance.startUsbScan();
 
-      final usbPrinters =
-          await Future.wait(devices.map<Printer>((device) async {
-        final map = Map<String, dynamic>.from(
-            device is String ? jsonDecode(device) : device);
+      final usbPrinters = await Future.wait(devices.map<Printer>((device) async {
+        final map = Map<String, dynamic>.from(device is String ? jsonDecode(device) : device);
         final printer = Printer(
           vendorId: map['vendorId'].toString(),
           productId: map['productId'].toString(),
@@ -281,8 +271,7 @@ class OtherPrinterManager {
           address: map['vendorId'].toString(),
           isConnected: map['connected'] ?? false,
         );
-        printer.isConnected =
-            await FlutterThermalPrinterPlatform.instance.isConnected(printer);
+        printer.isConnected = await FlutterThermalPrinterPlatform.instance.isConnected(printer);
         return printer;
       }).toList());
 
@@ -378,8 +367,7 @@ class OtherPrinterManager {
   }
 
   void _updateOrAddPrinter(Printer printer) {
-    final index =
-        _devices.indexWhere((device) => device.address == printer.address);
+    final index = _devices.indexWhere((device) => device.address == printer.address);
     if (index == -1) {
       _devices.add(printer);
     } else {
@@ -389,8 +377,7 @@ class OtherPrinterManager {
   }
 
   void sortDevices() {
-    _devices
-        .removeWhere((element) => element.name == null || element.name == '');
+    _devices.removeWhere((element) => element.name == null || element.name == '');
     // remove items having same vendorId
     Set<String> seen = {};
     _devices.retainWhere((element) {
