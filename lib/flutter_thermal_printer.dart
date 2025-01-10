@@ -270,4 +270,58 @@ class FlutterThermalPrinter {
       }
     }
   }
+
+  Future<void> printImageBytes({
+    required Uint8List imageBytes,
+    required Printer printer,
+    Duration delay = const Duration(milliseconds: 100),
+    PaperSize paperSize = PaperSize.mm80,
+    CapabilityProfile? profile,
+    bool printOnBle = false,
+    int? customWidth,
+  }) async {
+    if (printOnBle == false && printer.connectionType == ConnectionType.BLE) {
+      throw Exception(
+        "Image printing on BLE Printer may be slow or fail. Still Need try? set printOnBle to true",
+      );
+    }
+
+    if (Platform.isWindows) {
+      await printData(
+        printer,
+        imageBytes.toList(),
+        longData: true,
+      );
+    } else {
+      CapabilityProfile profile0 = profile ?? await CapabilityProfile.load();
+      final ticket = Generator(paperSize, profile0);
+      img.Image? imagebytes = img.decodeImage(imageBytes);
+      if (customWidth != null) {
+        final width = _makeDivisibleBy8(customWidth);
+        imagebytes = img.copyResize(imagebytes!, width: width);
+      }
+      imagebytes = _buildImageRasterAvaliable(imagebytes!);
+      final totalheight = imagebytes.height;
+      final totalwidth = imagebytes.width;
+      final timestoCut = totalheight ~/ 30;
+      for (var i = 0; i < timestoCut; i++) {
+        final croppedImage = img.copyCrop(
+          imagebytes,
+          x: 0,
+          y: i * 30,
+          width: totalwidth,
+          height: 30,
+        );
+        final raster = ticket.imageRaster(
+          croppedImage,
+          imageFn: PosImageFn.bitImageRaster,
+        );
+        await FlutterThermalPrinter.instance.printData(
+          printer,
+          raster,
+          longData: true,
+        );
+      }
+    }
+  }
 }
