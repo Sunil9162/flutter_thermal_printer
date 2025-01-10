@@ -271,12 +271,14 @@ class FlutterThermalPrinter {
     }
   }
 
-  Future<void> printImageBytes({
+   Future<void> printImageBytes({
     required Uint8List imageBytes,
     required Printer printer,
     Duration delay = const Duration(milliseconds: 100),
     PaperSize paperSize = PaperSize.mm80,
     CapabilityProfile? profile,
+    Generator? generator,
+    List<int>? onFinishBytes,
     bool printOnBle = false,
     int? customWidth,
   }) async {
@@ -294,7 +296,7 @@ class FlutterThermalPrinter {
       );
     } else {
       CapabilityProfile profile0 = profile ?? await CapabilityProfile.load();
-      final ticket = Generator(paperSize, profile0);
+      final ticket = generator ?? Generator(paperSize, profile0);
       img.Image? imagebytes = img.decodeImage(imageBytes);
       if (customWidth != null) {
         final width = _makeDivisibleBy8(customWidth);
