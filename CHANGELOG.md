@@ -1,3 +1,7 @@
+## 1.1.2
+* Added Improvments for windows Printing Thanks to `@eduardohr-muniz`
+* Updated Dependents Packages
+
 ## 1.0.1
 * Updated ReadMe
 
