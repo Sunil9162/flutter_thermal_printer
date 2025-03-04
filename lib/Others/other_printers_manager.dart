@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_thermal_printer/flutter_thermal_printer_platform_interface.dart';
@@ -25,6 +26,7 @@ class OtherPrinterManager {
 
   static String channelName = 'flutter_thermal_printer/events';
   EventChannel eventChannel = EventChannel(channelName);
+  bool get isIos => !kIsWeb && (Platform.isIOS || Platform.isMacOS);
 
   // // Start scanning for BLE devices
   // Future<void> startScan() async {
@@ -299,9 +301,15 @@ class OtherPrinterManager {
     try {
       subscription?.cancel();
       subscription = null;
-
-      if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
-        await FlutterBluePlus.turnOn();
+      if (isIos == false) {
+        if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
+          await FlutterBluePlus.turnOn();
+        }
+      } else {
+        BluetoothAdapterState state = await FlutterBluePlus.adapterState.first;
+        if (state == BluetoothAdapterState.off) {
+          log('Bluetooth is off');
+        }
       }
 
       await FlutterBluePlus.stopScan();
