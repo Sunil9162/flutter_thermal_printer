@@ -228,7 +228,8 @@ class OtherPrinterManager {
       } else {
         BluetoothAdapterState state = await FlutterBluePlus.adapterState.first;
         if (state == BluetoothAdapterState.off) {
-          log('Bluetooth is off');
+          log('Bluetooth is off, turning on.');
+          return;
         }
       }
 
