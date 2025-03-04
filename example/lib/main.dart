@@ -192,6 +192,7 @@ class _MyAppState extends State<MyApp> {
                           await _flutterThermalPrinterPlugin.printWidget(
                             context,
                             printer: printers[index],
+                            printOnBle: true,
                             widget: receiptWidget(
                               printers[index].connectionTypeString,
                             ),
