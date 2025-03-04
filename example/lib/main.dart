@@ -228,7 +228,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget receiptWidget(String printerType) {
     return SizedBox(
-      width: 380,
+      width: 550,
       child: Material(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
