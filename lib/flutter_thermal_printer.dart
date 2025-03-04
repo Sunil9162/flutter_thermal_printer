@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -8,11 +9,13 @@ import 'package:flutter_thermal_printer/Windows/window_printer_manager.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 import 'package:image/image.dart' as img;
 import 'package:screenshot/screenshot.dart';
+
 import 'Others/other_printers_manager.dart';
 
-export 'package:flutter_thermal_printer/network/network_printer.dart';
 export 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-export 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothDevice, BluetoothConnectionState;
+export 'package:flutter_blue_plus/flutter_blue_plus.dart'
+    show BluetoothDevice, BluetoothConnectionState;
+export 'package:flutter_thermal_printer/network/network_printer.dart';
 
 class FlutterThermalPrinter {
   FlutterThermalPrinter._();
@@ -32,22 +35,6 @@ class FlutterThermalPrinter {
       return OtherPrinterManager.instance.devicesStream;
     }
   }
-
-  // Future<void> startScan() async {
-  //   if (Platform.isWindows) {
-  //     await WindowPrinterManager.instance.startscan();
-  //   } else {
-  //     await OtherPrinterManager.instance.startScan();
-  //   }
-  // }
-
-  // Future<void> stopScan() async {
-  //   if (Platform.isWindows) {
-  //     await WindowPrinterManager.instance.stopscan();
-  //   } else {
-  //     await OtherPrinterManager.instance.stopScan();
-  //   }
-  // }
 
   Future<bool> connect(Printer device) async {
     if (Platform.isWindows) {
@@ -85,21 +72,12 @@ class FlutterThermalPrinter {
     }
   }
 
-  // Future<void> getUsbDevices() async {
-  //   if (Platform.isWindows) {
-  //     WindowPrinterManager.instance.getPrinters(
-  //       connectionTypes: [
-  //         ConnectionType.USB,
-  //       ],
-  //     );
-  //   } else {
-  //     await OtherPrinterManager.instance.startUsbScan();
-  //   }
-  // }
-
   Future<void> getPrinters({
     Duration refreshDuration = const Duration(seconds: 2),
-    List<ConnectionType> connectionTypes = const [ConnectionType.USB, ConnectionType.BLE],
+    List<ConnectionType> connectionTypes = const [
+      ConnectionType.USB,
+      ConnectionType.BLE
+    ],
     bool androidUsesFineLocation = false,
   }) async {
     if (Platform.isWindows) {
@@ -158,7 +136,8 @@ class FlutterThermalPrinter {
     Generator? generator,
   }) async {
     final controller = ScreenshotController();
-    final image = await controller.captureFromLongWidget(widget, pixelRatio: View.of(context).devicePixelRatio, delay: delay);
+    final image = await controller.captureFromLongWidget(widget,
+        pixelRatio: View.of(context).devicePixelRatio, delay: delay);
     Generator? generator0;
     if (generator == null) {
       final profile = await CapabilityProfile.load();
@@ -222,6 +201,7 @@ class FlutterThermalPrinter {
     PaperSize paperSize = PaperSize.mm80,
     CapabilityProfile? profile,
     bool printOnBle = false,
+    bool cutAfterPrinted = true,
   }) async {
     if (printOnBle == false && printer.connectionType == ConnectionType.BLE) {
       throw Exception(
@@ -229,23 +209,22 @@ class FlutterThermalPrinter {
       );
     }
     final controller = ScreenshotController();
-    await controller.captureFromLongWidget(
+
+    final image = await controller.captureFromLongWidget(
       widget,
       pixelRatio: View.of(context).devicePixelRatio,
       delay: delay,
     );
-    final image = await controller.capture();
-
     if (Platform.isWindows) {
       await printData(
         printer,
-        image!.toList(),
+        image.toList(),
         longData: true,
       );
     } else {
       CapabilityProfile profile0 = profile ?? await CapabilityProfile.load();
       final ticket = Generator(paperSize, profile0);
-      img.Image? imagebytes = img.decodeImage(image!);
+      img.Image? imagebytes = img.decodeImage(image);
       imagebytes = _buildImageRasterAvaliable(imagebytes!);
       final totalheight = imagebytes.height;
       final totalwidth = imagebytes.width;
@@ -265,6 +244,13 @@ class FlutterThermalPrinter {
         await FlutterThermalPrinter.instance.printData(
           printer,
           raster,
+          longData: true,
+        );
+      }
+      if (cutAfterPrinted) {
+        await FlutterThermalPrinter.instance.printData(
+          printer,
+          ticket.cut(),
           longData: true,
         );
       }

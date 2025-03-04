@@ -1,6 +1,7 @@
 # flutter_thermal_printer
-[![Visits Badge](https://badges.pufler.dev/visits/Sunil9162/flutter_thermal_printer)]([https://badges.pufler.dev](https://badges.pufler.dev/visits/Sunil9162/flutter_thermal_printer))
-[![Updated Badge](https://badges.pufler.dev/updated/Sunil9162/flutter_thermal_printer)](https://badges.pufler.dev)
+<img src="https://res.cloudinary.com/daagzbhsu/image/upload/v1735536729/vxobf0gilq0pixfsnjw1.png" />
+
+![Visits Badge](https://badges.pufler.dev/visits/Sunil9162/flutter_thermal_printer)
 
 Package for all services for thermal printer in Android, iOS, macOS, Windows.
 
@@ -24,6 +25,7 @@ final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
 enum ConnectionType {
   BLE,
   USB,
+  NETWORK,
 }
 
 // Additional Functions

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -31,8 +30,7 @@ class WindowPrinterManager {
     }
   }
 
-  final StreamController<List<Printer>> _devicesstream =
-      StreamController<List<Printer>>.broadcast();
+  final StreamController<List<Printer>> _devicesstream = StreamController<List<Printer>>.broadcast();
 
   Stream<List<Printer>> get devicesStream => _devicesstream.stream;
 
@@ -47,42 +45,14 @@ class WindowPrinterManager {
 
   StreamSubscription? subscription;
 
-  // Find all BLE devices
-  Future<void> startscan() async {
-    if (!isInitialized) {
-      log("Init");
-      await init();
-    }
-    if (!isInitialized) {
-      throw Exception(
-        'WindowBluetoothManager is not initialized. Try starting the scan again',
-      );
-    }
-    List<Printer> devices = [];
-    WinBle.startScanning();
-    subscription = WinBle.scanStream.listen((device) async {
-      log(device.name);
-      devices.add(Printer(
-        address: device.address,
-        name: device.name,
-        connectionType: ConnectionType.BLE,
-        isConnected: await WinBle.isPaired(device.address),
-        // isConnected: false,
-      ));
-    });
-  }
-
   // Connect to a BLE device
   Future<bool> connect(Printer device) async {
     if (!isInitialized) {
       throw Exception('WindowBluetoothManager is not initialized');
     }
-    bool isConnected = false;
-    final subscription = WinBle.connectionStream.listen((device) {});
     await WinBle.connect(device.address!);
-    await Future.delayed(const Duration(seconds: 3));
-    subscription.cancel();
-    return isConnected;
+    await Future.delayed(const Duration(seconds: 5));
+    return await WinBle.isPaired(device.address!);
   }
 
   // Print data to a BLE device
@@ -94,7 +64,7 @@ class WindowPrinterManager {
     if (device.connectionType == ConnectionType.USB) {
       using((Arena alloc) {
         final printer = RawPrinter(device.name!, alloc);
-        printer.printbytes(bytes);
+        printer.printEscPosWin32(bytes);
       });
       return;
     }
@@ -107,9 +77,7 @@ class WindowPrinterManager {
       address: device.address!,
       serviceId: service,
     );
-    final characteristic = characteristics
-        .firstWhere((element) => element.properties.write ?? false)
-        .uuid;
+    final characteristic = characteristics.firstWhere((element) => element.properties.write ?? false).uuid;
     final mtusize = await WinBle.getMaxMtuSize(device.address!);
     if (longData) {
       int mtu = mtusize - 50;
@@ -125,8 +93,7 @@ class WindowPrinterManager {
         timestoPrint = numberOfTimesInt;
       }
       for (var i = 0; i < timestoPrint; i++) {
-        final data = bytes.sublist(i * mtu,
-            ((i + 1) * mtu) > bytes.length ? bytes.length : ((i + 1) * mtu));
+        final data = bytes.sublist(i * mtu, ((i + 1) * mtu) > bytes.length ? bytes.length : ((i + 1) * mtu));
         await WinBle.write(
           address: device.address!,
           service: service,
@@ -157,12 +124,32 @@ class WindowPrinterManager {
     ],
   }) async {
     List<Printer> btlist = [];
-    if (connectionTypes.contains(ConnectionType.BLE)) {}
+    if (connectionTypes.contains(ConnectionType.BLE)) {
+      await init();
+      if (!isInitialized) {
+        await init();
+      }
+      if (!isInitialized) {
+        throw Exception(
+          'WindowBluetoothManager is not initialized. Try starting the scan again',
+        );
+      }
+      WinBle.stopScanning();
+      WinBle.startScanning();
+      subscription?.cancel();
+      subscription = WinBle.scanStream.listen((device) async {
+        btlist.add(Printer(
+          address: device.address,
+          name: device.name,
+          connectionType: ConnectionType.BLE,
+          isConnected: await WinBle.isPaired(device.address),
+        ));
+      });
+    }
     List<Printer> list = [];
     if (connectionTypes.contains(ConnectionType.USB)) {
       _usbSubscription?.cancel();
-      _usbSubscription =
-          Stream.periodic(refreshDuration, (x) => x).listen((event) async {
+      _usbSubscription = Stream.periodic(refreshDuration, (x) => x).listen((event) async {
         final devices = PrinterNames(PRINTER_ENUM_LOCAL);
         List<Printer> templist = [];
         for (var e in devices.all()) {
