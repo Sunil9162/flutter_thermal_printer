@@ -34,15 +34,13 @@ class _MyAppState extends State<MyApp> {
     _devicesStreamSubscription?.cancel();
     await _flutterThermalPrinterPlugin.getPrinters(connectionTypes: [
       ConnectionType.USB,
-      // ConnectionType.BLE,
+      ConnectionType.BLE,
     ]);
-    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream
-        .listen((List<Printer> event) {
+    _devicesStreamSubscription = _flutterThermalPrinterPlugin.devicesStream.listen((List<Printer> event) {
       log(event.map((e) => e.name).toList().toString());
       setState(() {
         printers = event;
-        printers.removeWhere(
-            (element) => element.name == null || element.name == '');
+        printers.removeWhere((element) => element.name == null || element.name == '');
       });
     });
   }
@@ -114,8 +112,7 @@ class _MyAppState extends State<MyApp> {
                         final generator = Generator(PaperSize.mm80, profile);
                         List<int> bytes = [];
                         if (context.mounted) {
-                          bytes = await FlutterThermalPrinter.instance
-                              .screenShotWidget(
+                          bytes = await FlutterThermalPrinter.instance.screenShotWidget(
                             context,
                             generator: generator,
                             widget: receiptWidget("Network"),
@@ -132,8 +129,7 @@ class _MyAppState extends State<MyApp> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final service = FlutterThermalPrinterNetwork(_ip,
-                            port: int.parse(_port));
+                        final service = FlutterThermalPrinterNetwork(_ip, port: int.parse(_port));
                         await service.connect();
                         final bytes = await _generateReceipt();
                         await service.printTicket(bytes);
@@ -183,22 +179,20 @@ class _MyAppState extends State<MyApp> {
                     return ListTile(
                       onTap: () async {
                         if (printers[index].isConnected ?? false) {
-                          await _flutterThermalPrinterPlugin
-                              .disconnect(printers[index]);
+                          await _flutterThermalPrinterPlugin.disconnect(printers[index]);
                         } else {
-                          await _flutterThermalPrinterPlugin
-                              .connect(printers[index]);
+                          await _flutterThermalPrinterPlugin.connect(printers[index]);
                         }
                       },
                       title: Text(printers[index].name ?? 'No Name'),
-                      subtitle:
-                          Text("Connected: ${printers[index].isConnected}"),
+                      subtitle: Text("Connected: ${printers[index].isConnected}"),
                       trailing: IconButton(
                         icon: const Icon(Icons.connect_without_contact),
                         onPressed: () async {
                           await _flutterThermalPrinterPlugin.printWidget(
                             context,
                             printer: printers[index],
+                            printOnBle: true,
                             widget: receiptWidget(
                               printers[index].connectionTypeString,
                             ),
@@ -234,7 +228,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget receiptWidget(String printerType) {
     return SizedBox(
-      width: 380,
+      width: 550,
       child: Material(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -274,8 +268,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Widget _buildReceiptRow(String leftText, String rightText,
-    {bool isBold = false}) {
+Widget _buildReceiptRow(String leftText, String rightText, {bool isBold = false}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4.0),
     child: Row(
@@ -283,15 +276,11 @@ Widget _buildReceiptRow(String leftText, String rightText,
       children: [
         Text(
           leftText,
-          style: TextStyle(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+          style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
         ),
         Text(
           rightText,
-          style: TextStyle(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+          style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
         ),
       ],
     ),
