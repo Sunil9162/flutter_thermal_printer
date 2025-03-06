@@ -72,6 +72,4 @@
         "xtree": "cpp",
         "xutility": "cpp"
     },
-    "dart.flutterSdkPath": "/Users/eduardomuniz/.puro/envs/stable/flutter",
-    "dart.sdkPath": "/Users/eduardomuniz/.puro/envs/stable/flutter/bin/cache/dart-sdk"
 }

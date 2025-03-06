@@ -1,3 +1,7 @@
+## 1.2.0
+* Fixed BLE turn on exception for ios and macos by `@eduardohr-muniz`
+* Reduced time to print image on ble devices by `@eduardohr-muniz`
+
 ## 1.1.0
 * Added Improvments for windows Printing Thanks to `@eduardohr-muniz`
 * Updated Dependents Packages
